@@ -66,10 +66,17 @@ public class Enemy : MonoBehaviour
     }
 
     // 열린 이웃 중 성 방향으로 최단인 셀을 고른다. 모두 막혔으면 (첫 번째로 발견한) 벽을 공격 상태로 진입.
+    // bestDist를 int.MaxValue가 아니라 현재 셀의 거리값으로 시작해야, 앞이 막혔을 때 온 길(뒤쪽,
+    // 거리값이 더 큼)로 되돌아가며 앞뒤로 무한 진동하지 않고 제대로 "막힘" 상태로 판정된다.
+    // 성으로 가는 길 자체가 완전히 끊겨 distToCastle이 도달 불가면, 대신 distToWall이 감소하는
+    // 쪽으로 움직여 가장 가까운 벽을 찾아가 부순다 — 그렇지 않으면 봉쇄된 적이 영원히 얼어붙는다.
     void PickNext()
     {
+        int castleDist = Pathfinder.I.GetDist(currentCell);
+        bool useCastle = castleDist != int.MaxValue;
+
         Vector3Int? best = null;
-        int bestDist = int.MaxValue;
+        int bestDist = useCastle ? castleDist : Pathfinder.I.GetDistToWall(currentCell);
         Vector3Int? blockedFirst = null;
 
         foreach (var nb in grid.GetNeighbors4(currentCell))
@@ -79,7 +86,7 @@ public class Enemy : MonoBehaviour
                 if (grid.IsOccupied(nb) && blockedFirst == null) blockedFirst = nb;
                 continue;
             }
-            int d = Pathfinder.I.GetDist(nb);
+            int d = useCastle ? Pathfinder.I.GetDist(nb) : Pathfinder.I.GetDistToWall(nb);
             if (d < bestDist) { best = nb; bestDist = d; }
         }
 

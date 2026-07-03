@@ -7,6 +7,8 @@ public class Wall : MonoBehaviour
     public static readonly Dictionary<Vector3Int, Wall> ByCell = new();
 
     public int hp = 5;
+    public Vector3Int Cell => cell;
+
     TileGrid grid;
     Vector3Int cell;
 

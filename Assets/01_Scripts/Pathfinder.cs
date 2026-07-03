@@ -11,6 +11,7 @@ public class Pathfinder : MonoBehaviour
     public TileGrid grid;
 
     readonly Dictionary<Vector3Int, int> distToCastle = new();
+    readonly Dictionary<Vector3Int, int> distToWall = new();
 
     void Awake() { I = this; }
     void Start() { Recompute(); }
@@ -35,9 +36,41 @@ public class Pathfinder : MonoBehaviour
                 q.Enqueue(nb);
             }
         }
+
+        RecomputeDistToWall();
+    }
+
+    // 성으로 가는 길이 완전히 막혀 distToCastle이 도달 불가(MaxValue)인 영역을 위한 보조 거리값.
+    // 벽에 인접한 걸을 수 있는 칸을 거리 0으로 시드해 바깥으로 BFS한다 — 갇힌 적이
+    // "가장 가까운 벽" 방향으로 이동해 부수러 갈 수 있게 한다.
+    void RecomputeDistToWall()
+    {
+        distToWall.Clear();
+        var q = new Queue<Vector3Int>();
+        foreach (var wall in Wall.All)
+        {
+            foreach (var nb in grid.GetNeighbors4(wall.Cell))
+            {
+                if (!grid.IsWalkable(nb) || distToWall.ContainsKey(nb)) continue;
+                distToWall[nb] = 0;
+                q.Enqueue(nb);
+            }
+        }
+
+        while (q.Count > 0)
+        {
+            var cur = q.Dequeue();
+            foreach (var nb in grid.GetNeighbors4(cur))
+            {
+                if (!grid.IsWalkable(nb) || distToWall.ContainsKey(nb)) continue;
+                distToWall[nb] = distToWall[cur] + 1;
+                q.Enqueue(nb);
+            }
+        }
     }
 
     public int GetDist(Vector3Int cell) => distToCastle.TryGetValue(cell, out var d) ? d : int.MaxValue;
+    public int GetDistToWall(Vector3Int cell) => distToWall.TryGetValue(cell, out var d) ? d : int.MaxValue;
 
     // 검증용: 임의 셀의 점유 상태를 토글하고 재계산해 우회/도달불가 판정을 눈으로 확인한다.
     // 실제 클릭 배치는 Phase 3(BuildManager) 몫이라 이 필드/메서드는 그때 제거해도 된다.
