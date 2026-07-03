@@ -22,6 +22,12 @@ public class Enemy : MonoBehaviour
     public float attackInterval = 0.6f;
     public float rangedScanRadius = 2.5f;
 
+    public Transform LuredBy => luredBy;
+    Transform luredBy;
+    float lureDwellDuration;
+    float lureDwellRemaining = -1f; // -1 = 아직 함정에 도착 못함(체류 시작 전)
+    readonly HashSet<Transform> visitedLures = new();
+
     int hp;
     TileGrid grid;
     Vector3Int currentCell;
@@ -52,6 +58,32 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
+        if (luredBy != null)
+        {
+            if (targetCell == null)
+            {
+                PickNextLureStep();
+                if (targetCell == null)
+                {
+                    // 더 가까워질 이웃이 없다 = 함정에 도착. 체류 타이머를 여기서 자체적으로 돌린다 —
+                    // 함정 쪽 트리거(OnTriggerStay2D)가 어떤 이유로 안 불리더라도(콜라이더 설정 등)
+                    // 반드시 시간이 지나면 풀리도록, 해제를 함정에 의존하지 않고 Enemy가 직접 보장한다.
+                    if (lureDwellRemaining < 0f) lureDwellRemaining = lureDwellDuration;
+                    lureDwellRemaining -= Time.deltaTime;
+                    if (lureDwellRemaining <= 0f) ReleaseLure();
+                    return;
+                }
+            }
+            Vector3 lureDest = grid.CellToWorld(targetCell.Value);
+            transform.position = Vector2.MoveTowards(transform.position, lureDest, speed * Time.deltaTime);
+            if (((Vector2)transform.position - (Vector2)lureDest).sqrMagnitude < 0.0001f)
+            {
+                currentCell = targetCell.Value;
+                targetCell = null;
+            }
+            return;
+        }
+
         if (kind == EnemyKind.Ranged && lockedWall == null)
             lockedWall = FindWallInRange();
 
@@ -143,6 +175,53 @@ public class Enemy : MonoBehaviour
         targetCell = bestOpen;
         if (bestOpen == null && bestWall.HasValue)
             Wall.ByCell.TryGetValue(bestWall.Value, out lockedWall);
+    }
+
+    // 유인 이동도 그리드 칸 단위로 진행한다 — 벽 점유는 무시하지만(닌자와 동일하게 HasTile만
+    // 확인) 실제 타일이 없는 칸(맵 바깥/틈)까지 가로지르지는 않는다. 매 칸 도착마다 유인 대상
+    // 쪽으로 더 가까워지는 이웃을 다시 고르는 단순 그리디 방식이라, 아주 복잡한 지형에서는
+    // 최적 경로가 아닐 수 있지만 함정은 보통 기존 통로 근처에 놓이므로 충분하다.
+    void PickNextLureStep()
+    {
+        Vector3 destWorld = luredBy.position;
+        Vector3Int? best = null;
+        float bestSqr = ((Vector2)grid.CellToWorld(currentCell) - (Vector2)destWorld).sqrMagnitude;
+        foreach (var nb in grid.GetNeighbors4(currentCell))
+        {
+            if (!grid.HasTile(nb)) continue;
+            float d = ((Vector2)grid.CellToWorld(nb) - (Vector2)destWorld).sqrMagnitude;
+            if (d < bestSqr) { best = nb; bestSqr = d; }
+        }
+        targetCell = best;
+    }
+
+    // 유인형 함정(FireTrap 등)이 유인을 걸 때 이 메서드를 통해서만 호출한다 — luredBy를
+    // 직접 대입하지 않고 상태(현재 셀, 이번 이동 목표, 방문 기록)를 함께 정리해준다.
+    // visitedLures에 한 번 추가된 함정은 이후 다시는 그 개체를 유인 대상으로 보지 않는다
+    // (같은 함정에 반복해서 잡혀가는 것을 원천 차단).
+    public void GetLured(Transform lureSource, float dwellDuration)
+    {
+        luredBy = lureSource;
+        lureDwellDuration = dwellDuration;
+        lureDwellRemaining = -1f;
+        visitedLures.Add(lureSource);
+        currentCell = grid.WorldToCell(transform.position);
+        targetCell = null;
+    }
+
+    public bool HasVisitedLure(Transform lureSource) => visitedLures.Contains(lureSource);
+
+    // 유인 중엔 그리드 밖 임의 위치로 이동했을 수 있으므로 Start()와 같은 방식으로 셀에 스냅한 뒤
+    // 경로찾기를 재개한다. 함정 쪽(FireTrap 등)에서 체류 시간이 다 됐을 때 호출한다.
+    public void ReleaseLure()
+    {
+        luredBy = null;
+        lureDwellRemaining = -1f;
+        lockedWall = null; // 유인 전에 걸려 있던 벽 공격 상태가 있었다면 깨끗이 지우고 재개
+        currentCell = grid.WorldToCell(transform.position);
+        transform.position = grid.CellToWorld(currentCell);
+        targetCell = null;
+        PickNext();
     }
 
     public void TakeDamage(int dmg)

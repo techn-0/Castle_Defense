@@ -1342,7 +1342,7 @@ TilemapRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_MaskInteraction: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
   m_ChunkCullingBounds: {x: 0, y: 0, z: 0}
@@ -4460,7 +4460,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3af738c3b825394493a0e2978c51b7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Economy
-  gold: 50
+  gold: 100
 --- !u!4 &1936868523
 Transform:
   m_ObjectHideFlags: 0
@@ -4509,10 +4509,16 @@ MonoBehaviour:
     type: 3}
   spikePrefab: {fileID: 8342010249840469377, guid: b9e07a718fdb8664e84991ca6ca7ca2f,
     type: 3}
+  fireTrapPrefab: {fileID: 5825156794584987633, guid: 27a146b7a62638343af56dbb9ef7d3e5,
+    type: 3}
+  explosiveTrapPrefab: {fileID: 1860137098855705308, guid: 496a702d0105dd04c88247e7ac7334f5,
+    type: 3}
   placedParent: {fileID: 0}
   cam: {fileID: 0}
   wallCost: 10
   spikeCost: 15
+  fireTrapCost: 20
+  explosiveTrapCost: 25
 --- !u!4 &2085578406
 Transform:
   m_ObjectHideFlags: 0
