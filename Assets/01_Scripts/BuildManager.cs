@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum BuildMode { None, Wall, Spike, FireTrap, ExplosiveTrap }
@@ -17,17 +18,16 @@ public class BuildManager : MonoBehaviour
 
     BuildMode mode = BuildMode.None;
     TileGrid grid;
-    SpriteRenderer preview;
+
+    Transform previewRoot;
+    readonly List<(SpriteRenderer sr, Color baseColor)> previewSprites = new();
 
     void Awake()
     {
         grid = FindFirstObjectByType<TileGrid>();
         if (cam == null) cam = Camera.main;
 
-        var go = new GameObject("BuildPreview");
-        preview = go.AddComponent<SpriteRenderer>();
-        preview.sortingOrder = 10;
-        preview.enabled = false;
+        previewRoot = new GameObject("BuildPreview").transform;
     }
 
     void Update()
@@ -49,8 +49,10 @@ public class BuildManager : MonoBehaviour
         Vector3Int cell = grid.WorldToCell(world);
         bool valid = CanPlace(cell);
 
-        preview.transform.position = grid.CellToWorld(cell);
-        preview.color = valid ? new Color(1, 1, 1, 0.5f) : new Color(1, 0.3f, 0.3f, 0.5f);
+        previewRoot.position = grid.CellToWorld(cell);
+        Color tint = valid ? Color.white : new Color(1f, 0.3f, 0.3f);
+        foreach (var (sr, baseColor) in previewSprites)
+            sr.color = new Color(baseColor.r * tint.r, baseColor.g * tint.g, baseColor.b * tint.b, 0.5f);
 
         if (valid && Input.GetMouseButtonDown(0)) Place(cell);
     }
@@ -82,9 +84,32 @@ public class BuildManager : MonoBehaviour
     void SetMode(BuildMode m)
     {
         mode = m;
+
+        foreach (Transform child in previewRoot) Destroy(child.gameObject);
+        previewSprites.Clear();
+
         var prefab = PrefabFor(mode);
-        preview.sprite = prefab != null ? prefab.GetComponentInChildren<SpriteRenderer>().sprite : null;
-        preview.enabled = mode != BuildMode.None;
+        if (prefab != null)
+        {
+            // 스프라이트 하나만 베껴서는(이전 방식) 자식이 여러 개인 프리팹(중첩된 소품 등)에서
+            // 일부가 안 보이고, 루트 스케일도 무시돼 크기가 어긋났다. 자식 SpriteRenderer를
+            // 전부 순회해 프리팹 루트 기준 상대 위치·최종 스케일 그대로 복제한다
+            // (이 프로젝트의 배치 프롭들은 전부 회전 없이(identity) 만들어져 있어 위치는 단순 뺄셈으로 충분).
+            Vector3 rootPos = prefab.transform.position;
+            foreach (var src in prefab.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                var go = new GameObject("PreviewSprite");
+                go.transform.SetParent(previewRoot, false);
+                go.transform.localPosition = src.transform.position - rootPos;
+                go.transform.localScale = src.transform.lossyScale;
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = src.sprite;
+                sr.sortingOrder = src.sortingOrder + 100;
+                previewSprites.Add((sr, src.color));
+            }
+        }
+
+        previewRoot.gameObject.SetActive(mode != BuildMode.None);
     }
 
     // 벽/함정 공용 유효성 검사.
