@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Wave1
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   entries:
-  - enemyPrefab: {fileID: 6941647534552606439, guid: 48d580da67757cf4f8f13a791535ffd7,
+  - enemyPrefab: {fileID: 4668328802031923636, guid: a01c6fcb48f169d4695db2e5823a1954,
       type: 3}
     kind: 0
     count: 3
     interval: 1
-  - enemyPrefab: {fileID: 6941647534552606439, guid: 48d580da67757cf4f8f13a791535ffd7,
+  - enemyPrefab: {fileID: 6698776138348635874, guid: 5b0c1710b1b183743986af88c84a19b0,
       type: 3}
     kind: 2
     count: 2

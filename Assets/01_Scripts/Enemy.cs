@@ -30,6 +30,11 @@ public class Enemy : MonoBehaviour
     Coroutine flashRoutine;
     HealthBar healthBar;
 
+    SPUM_Prefabs spum;
+    Transform spumVisual;
+    bool spumMoving;
+    float facing = 1f; // +1 = 오른쪽, -1 = 왼쪽. 순수 상하 이동일 땐 마지막 방향을 유지한다.
+
     public Transform LuredBy => luredBy;
     Transform luredBy;
     float lureDwellDuration;
@@ -55,6 +60,17 @@ public class Enemy : MonoBehaviour
 
         healthBar = GetComponent<HealthBar>();
         if (healthBar == null) healthBar = gameObject.AddComponent<HealthBar>();
+
+        // SPUM 캐릭터는 애니메이터가 클립을 자동으로 안 갈아끼워준다 — 프리팹에 이미 구워진
+        // IDLE_List/MOVE_List를 바탕으로 오버라이드 컨트롤러를 한 번 만들어줘야 PlayAnimation()으로
+        // Idle<->Move 전환이 가능해진다. 순정 Enemy.prefab처럼 SPUM_Prefabs가 없으면 그냥 무시.
+        spum = GetComponent<SPUM_Prefabs>();
+        if (spum != null)
+        {
+            spum.OverrideControllerInit();
+            spum.PlayAnimation(PlayerState.IDLE, 0);
+            spumVisual = transform.Find("UnitRoot");
+        }
 
         sr = GetComponent<SpriteRenderer>();
         if (sr != null)
@@ -84,13 +100,16 @@ public class Enemy : MonoBehaviour
                     // 더 가까워질 이웃이 없다 = 함정에 도착. 체류 타이머를 여기서 자체적으로 돌린다 —
                     // 함정 쪽 트리거(OnTriggerStay2D)가 어떤 이유로 안 불리더라도(콜라이더 설정 등)
                     // 반드시 시간이 지나면 풀리도록, 해제를 함정에 의존하지 않고 Enemy가 직접 보장한다.
+                    SetSpumMoving(false);
                     if (lureDwellRemaining < 0f) lureDwellRemaining = lureDwellDuration;
                     lureDwellRemaining -= Time.deltaTime;
                     if (lureDwellRemaining <= 0f) ReleaseLure();
                     return;
                 }
             }
+            SetSpumMoving(true);
             Vector3 lureDest = grid.CellToWorld(targetCell.Value);
+            FaceTowards(lureDest);
             transform.position = Vector2.MoveTowards(transform.position, lureDest, speed * Time.deltaTime);
             if (((Vector2)transform.position - (Vector2)lureDest).sqrMagnitude < 0.0001f)
             {
@@ -106,17 +125,46 @@ public class Enemy : MonoBehaviour
         if (lockedWall != null)
         {
             if (lockedWall.hp <= 0) { lockedWall = null; PickNext(); return; }
+            SetSpumMoving(false);
+            FaceTowards(lockedWall.transform.position);
             attackTimer -= Time.deltaTime;
-            if (attackTimer <= 0f) { lockedWall.TakeDamage(wallDamage); attackTimer = attackInterval; }
+            if (attackTimer <= 0f)
+            {
+                lockedWall.TakeDamage(wallDamage);
+                attackTimer = attackInterval;
+                if (spum != null) spum.PlayAnimation(PlayerState.ATTACK, 0);
+            }
             return;
         }
 
         // Pathfinder.Recompute()가 Start()에서 도는데, 오브젝트 간 Start() 순서는 보장되지 않는다.
         // 이 Enemy의 Start()가 먼저 돌면 첫 PickNext()가 빈 거리값을 보고 실패할 수 있으니 매 프레임 재시도한다.
         if (targetCell == null) { PickNext(); if (targetCell == null) return; }
+        SetSpumMoving(true);
         Vector3 dest = grid.CellToWorld(targetCell.Value);
+        FaceTowards(dest);
         transform.position = Vector2.MoveTowards(transform.position, dest, speed * Time.deltaTime);
         if (((Vector2)transform.position - (Vector2)dest).sqrMagnitude < 0.0001f) OnArrive();
+    }
+
+    void SetSpumMoving(bool moving)
+    {
+        if (spum == null || moving == spumMoving) return;
+        spumMoving = moving;
+        spum.PlayAnimation(moving ? PlayerState.MOVE : PlayerState.IDLE, 0);
+    }
+
+    // 목적지가 좌/우로 뚜렷이 갈릴 때만 방향을 바꾼다 — 순수 상하 이동 중엔 직전 좌우 방향을 유지.
+    void FaceTowards(Vector3 destWorld)
+    {
+        if (spumVisual == null) return;
+        float dx = destWorld.x - transform.position.x;
+        if (Mathf.Abs(dx) < 0.01f) return;
+        float dir = dx > 0f ? -1f : 1f;
+        if (dir == facing) return;
+        facing = dir;
+        var s = spumVisual.localScale;
+        spumVisual.localScale = new Vector3(Mathf.Abs(s.x) * facing, s.y, s.z);
     }
 
     void OnArrive()

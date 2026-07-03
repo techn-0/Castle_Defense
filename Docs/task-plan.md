@@ -111,6 +111,7 @@
 22. #24 폴리시 (HP 게이지, 이펙트, SFX) (완료 — Wall/Spike/Enemy HP 게이지, 파괴 파티클, SFX 훅. AudioClip은 Inspector에서 직접 배정 필요)
 23. #21 Mimic.cs → FireTrap.cs / ExplosiveTrap.cs (완료)
 24. #22 닌자 유닛 (완료)
+25. 종류별 적 프리팹 교체 (완료 — SPUM 기반 Enemy1.prefab(근접)·Ninja.prefab(닌자)·Enemy2.prefab(원거리, 유저가 직접 배선한 걸 발견해서 동일하게 보완)에 Enemy/Collider2D/Rigidbody2D 부착 + Idle/Move/Attack 애니메이션 전환(SPUM_Prefabs.PlayAnimation) 연결 + 이동 방향 좌우 반전(UnitRoot localScale.x) + 비주얼 세로 오프셋(-0.3) 적용. 보스는 아직 기존 Enemy.prefab(색 틴트) 사용 — 오프셋·기본 좌우 방향은 대략치라 에디터에서 육안 확인 필요)
 
 ### Phase 7 — 제출
 25. #25 시연 영상, PDF 리포트, ZIP 빌드 (마지막 날)
