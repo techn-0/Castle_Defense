@@ -16,5 +16,10 @@ MonoBehaviour:
   - enemyPrefab: {fileID: 6941647534552606439, guid: 48d580da67757cf4f8f13a791535ffd7,
       type: 3}
     kind: 0
-    count: 5
+    count: 2
+    interval: 10
+  - enemyPrefab: {fileID: 6941647534552606439, guid: 48d580da67757cf4f8f13a791535ffd7,
+      type: 3}
+    kind: 1
+    count: 3
     interval: 10

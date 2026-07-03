@@ -28,6 +28,8 @@ public class BuildManager : MonoBehaviour
 
     void Update()
     {
+        if (!GameManager.I.IsPlaying) return;
+
         if (Input.GetKeyDown(KeyCode.Alpha1)) SetMode(BuildMode.Wall);
         else if (Input.GetKeyDown(KeyCode.Alpha2)) SetMode(BuildMode.Spike);
         else if (Input.GetKeyDown(KeyCode.Escape)) SetMode(BuildMode.None);
@@ -46,6 +48,10 @@ public class BuildManager : MonoBehaviour
 
         if (valid && Input.GetMouseButtonDown(0)) Place(cell);
     }
+
+    public void SelectWall() => SetMode(BuildMode.Wall);
+    public void SelectSpike() => SetMode(BuildMode.Spike);
+    public void SelectNone() => SetMode(BuildMode.None);
 
     void SetMode(BuildMode m)
     {

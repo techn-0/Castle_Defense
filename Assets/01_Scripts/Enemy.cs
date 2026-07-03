@@ -69,7 +69,12 @@ public class Enemy : MonoBehaviour
     void OnArrive()
     {
         currentCell = targetCell.Value;
-        if (grid.IsCastle(currentCell)) { Destroy(gameObject); return; }
+        if (grid.IsCastle(currentCell))
+        {
+            CastleHealth.I.TakeDamage(damage);
+            Destroy(gameObject);
+            return;
+        }
         PickNext();
     }
 

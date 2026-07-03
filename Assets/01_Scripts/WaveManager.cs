@@ -17,8 +17,13 @@ public class WaveManager : MonoBehaviour
     void Awake() { grid = FindFirstObjectByType<TileGrid>(); }
     void Start() { BeginPrep(); }
 
+    public int WaveNumber => waveIndex + 1;
+    public int TotalWaves => waves.Length;
+
     void Update()
     {
+        if (!GameManager.I.IsPlaying) return;
+
         if (!waveActive)
         {
             prepTimer -= Time.deltaTime;
@@ -31,6 +36,7 @@ public class WaveManager : MonoBehaviour
             Economy.I.AddGold(waveClearBonus);
             waveActive = false;
             if (waveIndex + 1 < waves.Length) BeginPrep();
+            else GameManager.I.Victory();
         }
     }
 
