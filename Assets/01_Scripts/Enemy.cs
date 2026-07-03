@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum EnemyKind { Melee, Ranged }
@@ -7,10 +8,14 @@ public enum EnemyKind { Melee, Ranged }
 //   원거리: 이동 중에도 사거리 내 벽이 감지되면 멈춰서 그 벽을 공격.
 public class Enemy : MonoBehaviour
 {
+    // Wall.All과 동일한 패턴 — WaveManager가 "이번 웨이브 적이 다 사라졌는지" 판정하는 데 쓴다.
+    public static readonly List<Enemy> All = new();
+
     public EnemyKind kind = EnemyKind.Melee;
     public float speed = 2f;
     public int damage = 1;
     public int maxHp = 3;
+    public int goldReward = 2;
 
     public int wallDamage = 1;
     public float attackInterval = 0.6f;
@@ -22,6 +27,9 @@ public class Enemy : MonoBehaviour
     Vector3Int? targetCell;
     Wall lockedWall;
     float attackTimer;
+
+    void Awake() { All.Add(this); }
+    void OnDestroy() { All.Remove(this); }
 
     void Start()
     {
@@ -98,7 +106,11 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int dmg)
     {
         hp -= dmg;
-        if (hp <= 0) Destroy(gameObject);
+        if (hp <= 0)
+        {
+            Economy.I.AddGold(goldReward);
+            Destroy(gameObject);
+        }
     }
 
     Wall FindWallInRange()

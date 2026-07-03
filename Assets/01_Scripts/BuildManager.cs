@@ -8,6 +8,8 @@ public class BuildManager : MonoBehaviour
     public GameObject spikePrefab;
     public Transform placedParent;
     public Camera cam;
+    public int wallCost = 10;
+    public int spikeCost = 15;
 
     BuildMode mode = BuildMode.None;
     TileGrid grid;
@@ -53,18 +55,23 @@ public class BuildManager : MonoBehaviour
         preview.enabled = mode != BuildMode.None;
     }
 
-    // 벽/함정 공용 유효성 검사. 골드 비용 체크는 Phase 4(Economy) 몫이라 여기 없음.
+    // 벽/함정 공용 유효성 검사.
     bool CanPlace(Vector3Int cell)
     {
         if (!grid.InBounds(cell)) return false;
         if (!grid.IsWalkable(cell)) return false;
         if (grid.IsCastle(cell) || grid.IsSpawn(cell)) return false;
         if (Spike.ByCell.ContainsKey(cell)) return false;
+        int cost = mode == BuildMode.Wall ? wallCost : spikeCost;
+        if (Economy.I.gold < cost) return false;
         return true;
     }
 
     void Place(Vector3Int cell)
     {
+        int cost = mode == BuildMode.Wall ? wallCost : spikeCost;
+        if (!Economy.I.TrySpend(cost)) return;
+
         var prefab = mode == BuildMode.Wall ? wallPrefab : spikePrefab;
         Instantiate(prefab, grid.CellToWorld(cell), Quaternion.identity, placedParent);
 
