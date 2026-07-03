@@ -9,9 +9,10 @@ public class Pathfinder : MonoBehaviour
 {
     public static Pathfinder I;
     public TileGrid grid;
+    public int wallCrossCost = 5;
 
     readonly Dictionary<Vector3Int, int> distToCastle = new();
-    readonly Dictionary<Vector3Int, int> distToWall = new();
+    readonly Dictionary<Vector3Int, int> distThroughWalls = new();
 
     void Awake() { I = this; }
     void Start() { Recompute(); }
@@ -37,40 +38,50 @@ public class Pathfinder : MonoBehaviour
             }
         }
 
-        RecomputeDistToWall();
+        RecomputeDistThroughWalls();
     }
 
     // 성으로 가는 길이 완전히 막혀 distToCastle이 도달 불가(MaxValue)인 영역을 위한 보조 거리값.
-    // 벽에 인접한 걸을 수 있는 칸을 거리 0으로 시드해 바깥으로 BFS한다 — 갇힌 적이
-    // "가장 가까운 벽" 방향으로 이동해 부수러 갈 수 있게 한다.
-    void RecomputeDistToWall()
+    // 벽을 "통과 불가"가 아니라 "비용 wallCrossCost를 내면 통과 가능한 칸"으로 취급해
+    // 성에서부터 가중치 최단경로를 계산한다 — 갇힌 적이 아무 벽이나 가까운 걸 부수는 게 아니라,
+    // 부쉈을 때 실제로 성까지 가장 가까워지는 벽을 찾아가게 하기 위함. 그리드가 작아
+    // 우선순위 큐 없이 매번 프론티어에서 최소값을 선형 탐색하는 단순 Dijkstra로 구현한다.
+    void RecomputeDistThroughWalls()
     {
-        distToWall.Clear();
-        var q = new Queue<Vector3Int>();
-        foreach (var wall in Wall.All)
+        distThroughWalls.Clear();
+        var frontier = new List<Vector3Int>();
+
+        foreach (var c in grid.GetCastleCells())
         {
-            foreach (var nb in grid.GetNeighbors4(wall.Cell))
-            {
-                if (!grid.IsWalkable(nb) || distToWall.ContainsKey(nb)) continue;
-                distToWall[nb] = 0;
-                q.Enqueue(nb);
-            }
+            distThroughWalls[c] = 0;
+            frontier.Add(c);
         }
 
-        while (q.Count > 0)
+        while (frontier.Count > 0)
         {
-            var cur = q.Dequeue();
+            int bestIdx = 0;
+            for (int i = 1; i < frontier.Count; i++)
+                if (distThroughWalls[frontier[i]] < distThroughWalls[frontier[bestIdx]]) bestIdx = i;
+
+            var cur = frontier[bestIdx];
+            frontier.RemoveAt(bestIdx);
+
             foreach (var nb in grid.GetNeighbors4(cur))
             {
-                if (!grid.IsWalkable(nb) || distToWall.ContainsKey(nb)) continue;
-                distToWall[nb] = distToWall[cur] + 1;
-                q.Enqueue(nb);
+                if (!grid.HasTile(nb)) continue;
+                int stepCost = grid.IsOccupied(nb) ? wallCrossCost : 1;
+                int nd = distThroughWalls[cur] + stepCost;
+                if (!distThroughWalls.TryGetValue(nb, out var old) || nd < old)
+                {
+                    distThroughWalls[nb] = nd;
+                    frontier.Add(nb);
+                }
             }
         }
     }
 
     public int GetDist(Vector3Int cell) => distToCastle.TryGetValue(cell, out var d) ? d : int.MaxValue;
-    public int GetDistToWall(Vector3Int cell) => distToWall.TryGetValue(cell, out var d) ? d : int.MaxValue;
+    public int GetDistThroughWalls(Vector3Int cell) => distThroughWalls.TryGetValue(cell, out var d) ? d : int.MaxValue;
 
     // 검증용: 임의 셀의 점유 상태를 토글하고 재계산해 우회/도달불가 판정을 눈으로 확인한다.
     // 실제 클릭 배치는 Phase 3(BuildManager) 몫이라 이 필드/메서드는 그때 제거해도 된다.

@@ -32,6 +32,10 @@ public class TileGrid : MonoBehaviour
 
     bool HasBaseTile(Vector3Int cell) => tilemap.GetTile(cell) == walkableTile;
 
+    // 벽이 놓인 칸도 바닥 타일 자체는 있다 — Pathfinder의 벽-통과 가중치 탐색이
+    // 점유 여부와 무관하게 "이 칸이 그리드에 속하는지"만 판별할 때 쓴다.
+    public bool HasTile(Vector3Int cell) => HasBaseTile(cell);
+
     public bool IsCastle(Vector3Int cell) => castleCell.HasValue && castleCell.Value == cell;
     public bool IsSpawn(Vector3Int cell) => spawnCells.Contains(cell);
     public bool IsOccupied(Vector3Int cell) => occupied.TryGetValue(cell, out var o) && o;

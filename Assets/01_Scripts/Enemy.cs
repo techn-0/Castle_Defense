@@ -78,34 +78,52 @@ public class Enemy : MonoBehaviour
         PickNext();
     }
 
-    // 열린 이웃 중 성 방향으로 최단인 셀을 고른다. 모두 막혔으면 (첫 번째로 발견한) 벽을 공격 상태로 진입.
-    // bestDist를 int.MaxValue가 아니라 현재 셀의 거리값으로 시작해야, 앞이 막혔을 때 온 길(뒤쪽,
-    // 거리값이 더 큼)로 되돌아가며 앞뒤로 무한 진동하지 않고 제대로 "막힘" 상태로 판정된다.
-    // 성으로 가는 길 자체가 완전히 끊겨 distToCastle이 도달 불가면, 대신 distToWall이 감소하는
-    // 쪽으로 움직여 가장 가까운 벽을 찾아가 부순다 — 그렇지 않으면 봉쇄된 적이 영원히 얼어붙는다.
+    // 성으로 가는 길이 열려 있으면(distToCastle 도달 가능) 열린 이웃 중 최단인 셀로 이동한다 —
+    // BFS 불변식상 이 경우 항상 더 가까운 열린 이웃이 존재하므로 벽 공격으로 빠질 일이 없다.
+    // 완전히 막혀 있으면 벽을 통과 가능한 비용 칸으로 보는 distThroughWalls를 대신 따라간다:
+    // 아직 그 값이 줄어드는 열린 이웃이 있으면 그리로 걷고, 없으면(=사실상 봉쇄) 막힌 이웃 중
+    // distThroughWalls가 가장 작은(=부쉈을 때 성까지 가장 가까워지는) 벽을 공격 상태로 잠근다.
     void PickNext()
     {
         int castleDist = Pathfinder.I.GetDist(currentCell);
         bool useCastle = castleDist != int.MaxValue;
 
-        Vector3Int? best = null;
-        int bestDist = useCastle ? castleDist : Pathfinder.I.GetDistToWall(currentCell);
-        Vector3Int? blockedFirst = null;
+        if (useCastle)
+        {
+            Vector3Int? best = null;
+            int bestDist = castleDist;
+            foreach (var nb in grid.GetNeighbors4(currentCell))
+            {
+                if (!grid.IsWalkable(nb)) continue;
+                int d = Pathfinder.I.GetDist(nb);
+                if (d < bestDist) { best = nb; bestDist = d; }
+            }
+            targetCell = best;
+            return;
+        }
+
+        Vector3Int? bestOpen = null;
+        int bestThrough = Pathfinder.I.GetDistThroughWalls(currentCell);
+        Vector3Int? bestWall = null;
+        int bestWallThrough = int.MaxValue;
 
         foreach (var nb in grid.GetNeighbors4(currentCell))
         {
-            if (!grid.IsWalkable(nb))
+            if (grid.IsWalkable(nb))
             {
-                if (grid.IsOccupied(nb) && blockedFirst == null) blockedFirst = nb;
-                continue;
+                int d = Pathfinder.I.GetDistThroughWalls(nb);
+                if (d < bestThrough) { bestOpen = nb; bestThrough = d; }
             }
-            int d = useCastle ? Pathfinder.I.GetDist(nb) : Pathfinder.I.GetDistToWall(nb);
-            if (d < bestDist) { best = nb; bestDist = d; }
+            else if (grid.IsOccupied(nb))
+            {
+                int d = Pathfinder.I.GetDistThroughWalls(nb);
+                if (d < bestWallThrough) { bestWall = nb; bestWallThrough = d; }
+            }
         }
 
-        targetCell = best;
-        if (best == null && blockedFirst.HasValue)
-            Wall.ByCell.TryGetValue(blockedFirst.Value, out lockedWall);
+        targetCell = bestOpen;
+        if (bestOpen == null && bestWall.HasValue)
+            Wall.ByCell.TryGetValue(bestWall.Value, out lockedWall);
     }
 
     public void TakeDamage(int dmg)
