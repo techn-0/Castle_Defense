@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum EnemyKind { Melee, Ranged }
+public enum EnemyKind { Melee, Ranged, Ninja }
 
-// 근접/원거리 공통 스크립트. kind 하나로 벽 반응만 분기한다.
+// 근접/원거리/닌자 공통 스크립트. kind 하나로 벽 반응만 분기한다.
 //   근접: 열린 이웃 셀이 있으면 그리로. 모두 막혔을 때만 앞의 벽 공격.
 //   원거리: 이동 중에도 사거리 내 벽이 감지되면 멈춰서 그 벽을 공격.
+//   닌자: 벽 점유를 아예 무시하고 최단 경로로 그대로 통과.
 public class Enemy : MonoBehaviour
 {
     // Wall.All과 동일한 패턴 — WaveManager가 "이번 웨이브 적이 다 사라졌는지" 판정하는 데 쓴다.
@@ -39,8 +40,12 @@ public class Enemy : MonoBehaviour
         hp = maxHp;
 
         var sr = GetComponent<SpriteRenderer>();
-        if (sr != null) sr.color = kind == EnemyKind.Ranged
-            ? new Color(0.4f, 0.7f, 1f) : new Color(1f, 0.6f, 0.6f);
+        if (sr != null) sr.color = kind switch
+        {
+            EnemyKind.Ranged => new Color(0.4f, 0.7f, 1f),
+            EnemyKind.Ninja => new Color(0.25f, 0.25f, 0.3f),
+            _ => new Color(1f, 0.6f, 0.6f),
+        };
 
         PickNext();
     }
@@ -85,6 +90,20 @@ public class Enemy : MonoBehaviour
     // distThroughWalls가 가장 작은(=부쉈을 때 성까지 가장 가까워지는) 벽을 공격 상태로 잠근다.
     void PickNext()
     {
+        if (kind == EnemyKind.Ninja)
+        {
+            Vector3Int? nextCell = null;
+            int nextDist = Pathfinder.I.GetDistIgnoringWalls(currentCell);
+            foreach (var nb in grid.GetNeighbors4(currentCell))
+            {
+                if (!grid.HasTile(nb)) continue;
+                int d = Pathfinder.I.GetDistIgnoringWalls(nb);
+                if (d < nextDist) { nextCell = nb; nextDist = d; }
+            }
+            targetCell = nextCell;
+            return;
+        }
+
         int castleDist = Pathfinder.I.GetDist(currentCell);
         bool useCastle = castleDist != int.MaxValue;
 

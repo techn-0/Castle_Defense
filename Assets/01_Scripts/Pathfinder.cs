@@ -13,6 +13,7 @@ public class Pathfinder : MonoBehaviour
 
     readonly Dictionary<Vector3Int, int> distToCastle = new();
     readonly Dictionary<Vector3Int, int> distThroughWalls = new();
+    readonly Dictionary<Vector3Int, int> distIgnoringWalls = new();
 
     void Awake() { I = this; }
     void Start() { Recompute(); }
@@ -39,6 +40,31 @@ public class Pathfinder : MonoBehaviour
         }
 
         RecomputeDistThroughWalls();
+        RecomputeDistIgnoringWalls();
+    }
+
+    // 벽 점유 여부를 아예 무시하는 순수 BFS(가중치 없음) — 닌자 유닛이 벽을 뚫고 지나갈 때 쓴다.
+    // distToCastle과 구조는 동일하고 필터만 IsWalkable 대신 HasTile(바닥 타일 존재만 확인).
+    void RecomputeDistIgnoringWalls()
+    {
+        distIgnoringWalls.Clear();
+        var q = new Queue<Vector3Int>();
+        foreach (var c in grid.GetCastleCells())
+        {
+            distIgnoringWalls[c] = 0;
+            q.Enqueue(c);
+        }
+
+        while (q.Count > 0)
+        {
+            var cur = q.Dequeue();
+            foreach (var nb in grid.GetNeighbors4(cur))
+            {
+                if (!grid.HasTile(nb) || distIgnoringWalls.ContainsKey(nb)) continue;
+                distIgnoringWalls[nb] = distIgnoringWalls[cur] + 1;
+                q.Enqueue(nb);
+            }
+        }
     }
 
     // 성으로 가는 길이 완전히 막혀 distToCastle이 도달 불가(MaxValue)인 영역을 위한 보조 거리값.
@@ -82,6 +108,7 @@ public class Pathfinder : MonoBehaviour
 
     public int GetDist(Vector3Int cell) => distToCastle.TryGetValue(cell, out var d) ? d : int.MaxValue;
     public int GetDistThroughWalls(Vector3Int cell) => distThroughWalls.TryGetValue(cell, out var d) ? d : int.MaxValue;
+    public int GetDistIgnoringWalls(Vector3Int cell) => distIgnoringWalls.TryGetValue(cell, out var d) ? d : int.MaxValue;
 
     // 검증용: 임의 셀의 점유 상태를 토글하고 재계산해 우회/도달불가 판정을 눈으로 확인한다.
     // 실제 클릭 배치는 Phase 3(BuildManager) 몫이라 이 필드/메서드는 그때 제거해도 된다.
