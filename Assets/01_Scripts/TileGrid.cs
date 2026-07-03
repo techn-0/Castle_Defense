@@ -2,32 +2,38 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-// Tilemap을 감싸는 그리드 레이어. 타일 종류(Walkable/Castle/Spawn)는 칠해진 Tile 애셋으로
-// 정적으로 결정되고, occupied(벽 점유 여부)는 런타임에 별도로 관리한다.
+// Tilemap을 감싸는 그리드 레이어. "걷기 가능"은 칠해진 Walkable 타일로 정적으로 결정되고,
+// Castle/Spawn은 타일이 아니라 씬의 CastleMarker/SpawnPoint 오브젝트 위치로 결정한다
+// (HP 등 게임 로직을 가질 성/스폰 지점을 타일맵과 이중으로 관리하지 않기 위함).
+// occupied(벽 점유 여부)는 런타임에 별도로 관리한다.
 public class TileGrid : MonoBehaviour
 {
     public Tilemap tilemap;
-    public TileBase walkableTile, castleTile, spawnTile;
+    public TileBase walkableTile;
 
     readonly Dictionary<Vector3Int, bool> occupied = new();
+    Vector3Int? castleCell;
+    readonly List<Vector3Int> spawnCells = new();
     BoundsInt bounds;
 
     void Awake()
     {
         tilemap.CompressBounds();
         bounds = tilemap.cellBounds;
+
+        var castle = FindFirstObjectByType<CastleMarker>();
+        if (castle != null) castleCell = WorldToCell(castle.transform.position);
+
+        foreach (var sp in FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None))
+            spawnCells.Add(WorldToCell(sp.transform.position));
     }
 
     public bool InBounds(Vector3Int cell) => bounds.Contains(cell);
 
-    bool HasBaseTile(Vector3Int cell)
-    {
-        var t = tilemap.GetTile(cell);
-        return t == walkableTile || t == castleTile || t == spawnTile;
-    }
+    bool HasBaseTile(Vector3Int cell) => tilemap.GetTile(cell) == walkableTile;
 
-    public bool IsCastle(Vector3Int cell) => tilemap.GetTile(cell) == castleTile;
-    public bool IsSpawn(Vector3Int cell) => tilemap.GetTile(cell) == spawnTile;
+    public bool IsCastle(Vector3Int cell) => castleCell.HasValue && castleCell.Value == cell;
+    public bool IsSpawn(Vector3Int cell) => spawnCells.Contains(cell);
     public bool IsOccupied(Vector3Int cell) => occupied.TryGetValue(cell, out var o) && o;
     public bool IsWalkable(Vector3Int cell) => HasBaseTile(cell) && !IsOccupied(cell);
 
@@ -44,15 +50,10 @@ public class TileGrid : MonoBehaviour
 
     public IEnumerable<Vector3Int> GetCastleCells()
     {
-        foreach (var c in AllCells())
-            if (IsCastle(c)) yield return c;
+        if (castleCell.HasValue) yield return castleCell.Value;
     }
 
-    public IEnumerable<Vector3Int> GetSpawnCells()
-    {
-        foreach (var c in AllCells())
-            if (IsSpawn(c)) yield return c;
-    }
+    public IEnumerable<Vector3Int> GetSpawnCells() => spawnCells;
 
     static readonly Vector3Int[] Dirs4 = { Vector3Int.up, Vector3Int.down, Vector3Int.left, Vector3Int.right };
 

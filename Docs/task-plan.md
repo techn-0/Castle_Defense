@@ -4,8 +4,8 @@
 
 | # | 카테고리 | 작업 | 우선순위 | 비고 (신규/재작성/재사용) |
 |---|---|---|---|---|
-| 1 | 그리드 | Grid + Tilemap 세팅. walkable/castle/spawn 타일 지정 | 필수 | 신규 (Tilemap 에셋) |
-| 2 | 그리드 | TileGrid.cs — IsWalkable(x,y), SetOccupied(x,y), 월드↔셀 좌표 변환 | 필수 | 신규 |
+| 1 | 그리드 | Grid + Tilemap 세팅 (walkable 타일 페인팅) + CastleMarker/SpawnPoint 오브젝트 배치 | 필수 | 신규 (Tilemap 에셋 + 마커 오브젝트) |
+| 2 | 그리드 | TileGrid.cs — IsWalkable(x,y), SetOccupied(x,y), 월드↔셀 좌표 변환, CastleMarker/SpawnPoint 스캔 | 필수 | 신규 |
 | 3 | 경로 | Pathfinder.cs — 성에서 BFS로 전체 타일 distToCastle 계산 | 필수 | 신규 (Map.ComputeDistances의 아이디어만 이식) |
 | 4 | 경로 | 벽 배치/파괴 시 Pathfinder.Recompute() 훅 | 필수 | 신규 |
 | 5 | 적 | Enemy.cs 이동 재작성 — 인접 4타일 중 distToCastle 최소로 이동 | 필수 | 재작성 |
