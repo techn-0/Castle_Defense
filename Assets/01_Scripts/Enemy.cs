@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum EnemyKind { Melee, Ranged, Ninja }
+public enum EnemyKind { Melee, Ranged, Ninja, Boss }
 
 // 근접/원거리/닌자 공통 스크립트. kind 하나로 벽 반응만 분기한다.
 //   근접: 열린 이웃 셀이 있으면 그리로. 모두 막혔을 때만 앞의 벽 공격.
@@ -28,6 +28,7 @@ public class Enemy : MonoBehaviour
     SpriteRenderer sr;
     Color baseColor;
     Coroutine flashRoutine;
+    HealthBar healthBar;
 
     public Transform LuredBy => luredBy;
     Transform luredBy;
@@ -52,6 +53,9 @@ public class Enemy : MonoBehaviour
         transform.position = grid.CellToWorld(currentCell);
         hp = maxHp;
 
+        healthBar = GetComponent<HealthBar>();
+        if (healthBar == null) healthBar = gameObject.AddComponent<HealthBar>();
+
         sr = GetComponent<SpriteRenderer>();
         if (sr != null)
         {
@@ -59,6 +63,7 @@ public class Enemy : MonoBehaviour
             {
                 EnemyKind.Ranged => new Color(0.4f, 0.7f, 1f),
                 EnemyKind.Ninja => new Color(0.25f, 0.25f, 0.3f),
+                EnemyKind.Boss => new Color(0.6f, 0.1f, 0.75f),
                 _ => new Color(1f, 0.6f, 0.6f),
             };
             sr.color = baseColor;
@@ -252,6 +257,7 @@ public class Enemy : MonoBehaviour
             if (flashRoutine != null) StopCoroutine(flashRoutine);
             flashRoutine = StartCoroutine(FlashRoutine());
         }
+        healthBar.SetFraction((float)hp / maxHp);
     }
 
     IEnumerator FlashRoutine()

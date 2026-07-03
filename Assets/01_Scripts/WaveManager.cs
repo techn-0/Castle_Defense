@@ -68,6 +68,12 @@ public class WaveManager : MonoBehaviour
         var spawnCells = new List<Vector3Int>(grid.GetSpawnCells());
         var cell = spawnCells[Random.Range(0, spawnCells.Count)];
         var go = Instantiate(entry.enemyPrefab, grid.CellToWorld(cell), Quaternion.identity);
-        go.GetComponent<Enemy>().kind = entry.kind;
+
+        var enemy = go.GetComponent<Enemy>();
+        enemy.kind = entry.kind;
+        if (entry.hpOverride > 0) enemy.maxHp = entry.hpOverride;
+        if (entry.speedOverride > 0) enemy.speed = entry.speedOverride;
+        if (entry.goldOverride > 0) enemy.goldReward = entry.goldOverride;
+        if (entry.sizeMultiplier != 1f) go.transform.localScale *= entry.sizeMultiplier;
     }
 }

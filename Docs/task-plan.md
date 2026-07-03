@@ -107,8 +107,8 @@
 → **마일스톤 D**: 필수 항목(1~20) 완료 — 플레이 가능한 최소 완성 빌드(MVP).
 
 ### Phase 6 — 스트레치 (여유 있을 때만)
-21. #23 밸런싱 (웨이브 4-5, 보스)
-22. #24 폴리시 (HP 게이지, 이펙트, SFX) (완료 — Wall/Spike HP 게이지, 파괴 파티클, SFX 훅. AudioClip은 Inspector에서 직접 배정 필요)
+21. #23 밸런싱 (웨이브 4-5, 보스) (완료 — Wave4/5.asset 추가, EnemyKind.Boss 신설, WaveData.SpawnEntry에 웨이브별 hp/speed/gold/크기 오버라이드 필드 추가)
+22. #24 폴리시 (HP 게이지, 이펙트, SFX) (완료 — Wall/Spike/Enemy HP 게이지, 파괴 파티클, SFX 훅. AudioClip은 Inspector에서 직접 배정 필요)
 23. #21 Mimic.cs → FireTrap.cs / ExplosiveTrap.cs (완료)
 24. #22 닌자 유닛 (완료)
 
