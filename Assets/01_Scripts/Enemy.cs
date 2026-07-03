@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,6 +23,12 @@ public class Enemy : MonoBehaviour
     public float attackInterval = 0.6f;
     public float rangedScanRadius = 2.5f;
 
+    public AudioClip hitSfx;
+    public AudioClip deathSfx;
+    SpriteRenderer sr;
+    Color baseColor;
+    Coroutine flashRoutine;
+
     public Transform LuredBy => luredBy;
     Transform luredBy;
     float lureDwellDuration;
@@ -45,13 +52,17 @@ public class Enemy : MonoBehaviour
         transform.position = grid.CellToWorld(currentCell);
         hp = maxHp;
 
-        var sr = GetComponent<SpriteRenderer>();
-        if (sr != null) sr.color = kind switch
+        sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
         {
-            EnemyKind.Ranged => new Color(0.4f, 0.7f, 1f),
-            EnemyKind.Ninja => new Color(0.25f, 0.25f, 0.3f),
-            _ => new Color(1f, 0.6f, 0.6f),
-        };
+            baseColor = kind switch
+            {
+                EnemyKind.Ranged => new Color(0.4f, 0.7f, 1f),
+                EnemyKind.Ninja => new Color(0.25f, 0.25f, 0.3f),
+                _ => new Color(1f, 0.6f, 0.6f),
+            };
+            sr.color = baseColor;
+        }
 
         PickNext();
     }
@@ -229,9 +240,26 @@ public class Enemy : MonoBehaviour
         hp -= dmg;
         if (hp <= 0)
         {
+            if (deathSfx != null) AudioSource.PlayClipAtPoint(deathSfx, transform.position);
+            EffectsUtil.SpawnBurst(transform.position, baseColor);
             Economy.I.AddGold(goldReward);
             Destroy(gameObject);
+            return;
         }
+        if (hitSfx != null) AudioSource.PlayClipAtPoint(hitSfx, transform.position);
+        if (sr != null)
+        {
+            if (flashRoutine != null) StopCoroutine(flashRoutine);
+            flashRoutine = StartCoroutine(FlashRoutine());
+        }
+    }
+
+    IEnumerator FlashRoutine()
+    {
+        sr.color = Color.white;
+        yield return new WaitForSeconds(0.08f);
+        sr.color = baseColor;
+        flashRoutine = null;
     }
 
     Wall FindWallInRange()

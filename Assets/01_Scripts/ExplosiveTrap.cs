@@ -7,6 +7,7 @@ public class ExplosiveTrap : MonoBehaviour
 
     public int explosionDamage = 5;
     public float explosionRadius = 1.5f;
+    public AudioClip explosionSfx;
 
     Vector3Int cell;
 
@@ -37,6 +38,8 @@ public class ExplosiveTrap : MonoBehaviour
             float sqr = ((Vector2)e.transform.position - (Vector2)transform.position).sqrMagnitude;
             if (sqr < explosionRadius * explosionRadius) e.TakeDamage(explosionDamage);
         }
+        if (explosionSfx != null) AudioSource.PlayClipAtPoint(explosionSfx, transform.position);
+        EffectsUtil.SpawnBurst(transform.position, new Color(1f, 0.5f, 0.1f), 16, 3f);
         Destroy(gameObject);
     }
 }

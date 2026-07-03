@@ -7,10 +7,14 @@ public class Wall : MonoBehaviour
     public static readonly Dictionary<Vector3Int, Wall> ByCell = new();
 
     public int hp = 5;
+    public AudioClip hitSfx;
+    public AudioClip destroySfx;
     public Vector3Int Cell => cell;
 
     TileGrid grid;
     Vector3Int cell;
+    int maxHp;
+    HealthBar healthBar;
 
     // 점유 등록은 Awake에서만 한다(Recompute는 부르지 않음) — 씬에 미리 놓인 벽은
     // 전부 Awake가 끝난 뒤 Pathfinder.Start()의 최초 BFS에서 자동 반영된다.
@@ -22,6 +26,10 @@ public class Wall : MonoBehaviour
         grid.SetOccupied(cell, true);
         All.Add(this);
         ByCell[cell] = this;
+
+        maxHp = hp;
+        healthBar = GetComponent<HealthBar>();
+        if (healthBar == null) healthBar = gameObject.AddComponent<HealthBar>();
     }
 
     void OnDestroy()
@@ -35,6 +43,14 @@ public class Wall : MonoBehaviour
     public void TakeDamage(int dmg)
     {
         hp -= dmg;
-        if (hp <= 0) Destroy(gameObject);
+        if (hp <= 0)
+        {
+            if (destroySfx != null) AudioSource.PlayClipAtPoint(destroySfx, transform.position);
+            EffectsUtil.SpawnBurst(transform.position, Color.gray);
+            Destroy(gameObject);
+            return;
+        }
+        if (hitSfx != null) AudioSource.PlayClipAtPoint(hitSfx, transform.position);
+        healthBar.SetFraction((float)hp / maxHp);
     }
 }

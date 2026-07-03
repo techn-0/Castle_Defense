@@ -108,7 +108,7 @@
 
 ### Phase 6 — 스트레치 (여유 있을 때만)
 21. #23 밸런싱 (웨이브 4-5, 보스)
-22. #24 폴리시 (HP 게이지, 이펙트, SFX)
+22. #24 폴리시 (HP 게이지, 이펙트, SFX) (완료 — Wall/Spike HP 게이지, 파괴 파티클, SFX 훅. AudioClip은 Inspector에서 직접 배정 필요)
 23. #21 Mimic.cs → FireTrap.cs / ExplosiveTrap.cs (완료)
 24. #22 닌자 유닛 (완료)
 
