@@ -6041,8 +6041,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 320763671289049953, guid: b3a9494bf08058093ecf07ea1b79e42a,
     type: 3}
   projectileSpeed: 8
-  hitSfx: {fileID: 0}
-  deathSfx: {fileID: 0}
+  hitSfx: {fileID: 8300000, guid: 2f93dd4046da59144b2702257ead5ba5, type: 3}
+  deathSfx: {fileID: 8300000, guid: dd50438b8db23e841a79486462ba606a, type: 3}
   burnEffectPrefab: {fileID: 2091446406734768691, guid: f8446a3b109aa8641aa59658a9c9b733,
     type: 3}
   burnEffectOffset: {x: 0, y: 0, z: 0}

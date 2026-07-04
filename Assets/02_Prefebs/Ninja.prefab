@@ -6480,8 +6480,10 @@ MonoBehaviour:
   wallDamage: 1
   attackInterval: 0.6
   rangedScanRadius: 2.5
-  hitSfx: {fileID: 0}
-  deathSfx: {fileID: 0}
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 8
+  hitSfx: {fileID: 8300000, guid: 2f93dd4046da59144b2702257ead5ba5, type: 3}
+  deathSfx: {fileID: 8300000, guid: 9348ea9dde95b7f47b4883d48c64ecf0, type: 3}
   burnEffectPrefab: {fileID: 2091446406734768691, guid: f8446a3b109aa8641aa59658a9c9b733,
     type: 3}
   burnEffectOffset: {x: 0, y: 0, z: 0}
