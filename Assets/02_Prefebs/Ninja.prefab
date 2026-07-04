@@ -6474,8 +6474,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
   kind: 2
   speed: 2
-  damage: 1
-  maxHp: 3
+  damage: 5
+  maxHp: 10
   goldReward: 2
   wallDamage: 1
   attackInterval: 0.6

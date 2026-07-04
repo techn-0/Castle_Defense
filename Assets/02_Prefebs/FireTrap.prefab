@@ -52,6 +52,11 @@ MonoBehaviour:
   tickDamage: 1
   tickInterval: 0.5
   dwellDuration: 1
+  durability: 8
+  spreadRadius: 1.5
+  spreadDamage: 1
+  hitSfx: {fileID: 0}
+  destroySfx: {fileID: 0}
 --- !u!58 &2292348237843732295
 CircleCollider2D:
   m_ObjectHideFlags: 0

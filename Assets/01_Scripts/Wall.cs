@@ -7,6 +7,7 @@ public class Wall : MonoBehaviour
     public static readonly Dictionary<Vector3Int, Wall> ByCell = new();
 
     public int hp = 5;
+    public int thornDamage = 1;
     public AudioClip hitSfx;
     public AudioClip destroySfx;
     public Vector3Int Cell => cell;

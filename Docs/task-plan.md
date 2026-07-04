@@ -35,6 +35,7 @@
 | 29 | 배치 | 철거(Demolish) 기능 — 키보드 5로 철거 모드 진입, 클릭한 칸의 벽/함정을 환불 없이 즉시 파괴, 대상 위 커서 시 빨간 하이라이트 | 필수 | 신규 (BuildManager, BuildPanelUI) |
 | 30 | 버그 수정 | 적이 이동 중(목표 칸 도착 전) 그 칸에 새로 놓인 벽을 뚫고 지나가던 문제 수정 — 매 프레임 목표 칸 점유 여부 재검사 + 벽/함정을 적이 현재 서 있는 칸에는 배치 불가 처리 | 필수 | 재작성 (Enemy.cs, BuildManager.CanPlace) |
 | 31 | 로그라이크 | 강화 시스템 도입 — 상점(강화) 패널에서 골드로 영구 강화 구매, 가시 함정 강화(밟으면 3초 슬로우, 30G) 최초 적용 | 확장(선택) | 신규 (UpgradeManager.cs, ShopPanelUI.cs) + 재사용 (Economy 싱글톤 패턴, BuildPanelUI 라벨 갱신 패턴) |
+| 32 | 로그라이크 | 벽/화염 함정 강화 추가 — 단순 수치 증가 대신 새 행동 추가: 벽은 "가시 벽"(피격 시 공격한 적에게 반격 데미지, 25G), 화염 함정은 "화상 전이"(틱 데미지 시 주변 다른 적에게도 전파, 25G) | 확장(선택) | 재사용 (UpgradeManager/ShopPanelUI 패턴 확장, ExplosiveTrap.Explode 스냅샷 순회 패턴) |
 
 ## 2. 시스템 단위 그룹
 
@@ -139,7 +140,8 @@
 30. #30 버그 수정: 적이 벽을 뚫고 이동 — 원인은 `Enemy.PickNext()`가 도착 시점에만 다음 목표를 재계산해서, 적이 이미 목표로 정한 칸에 이동 도중 새 벽이 세워지면 재검사 없이 그 칸으로 계속 걸어 들어갔던 것(도착 후에야 우회가 반영됨). `Enemy.Update()`의 이동 분기에 매 프레임 `grid.IsOccupied(targetCell)` 재검사를 추가해, 이동 중 목표 칸이 점유되면 즉시 목표를 무효화하고 `PickNext()`를 다시 호출하도록 수정(닌자는 원래 벽을 무시하는 설계라 예외). 근본 원인 예방 차원에서 `BuildManager.CanPlace()`에도 적이 현재 서 있는 칸에는 벽/함정을 배치할 수 없도록 검사 추가. `Enemy.CurrentCell` 공개 프로퍼티 신설.
 
 ### Phase 10 — 로그라이크 강화 시스템 (코드 작업 완료 — 씬 배선 대기 중)
-31. #31 상점(강화) 패널 — 개별 오브젝트를 클릭해 강화하는 방식 대신, 패널을 열어 골드로 영구 강화를 구매하는 "테크트리 해금" 방식 채택(구매 즉시 이미 설치된 것 + 앞으로 설치할 것 모두에 적용). `UpgradeManager.cs`(Economy.cs와 동일한 싱글톤 패턴, 씬 재시작 시 인스턴스 필드라 자동 초기화)가 해금 상태/비용을 들고, `ShopPanelUI.cs`(BuildPanelUI.cs와 동일하게 라벨/interactable만 갱신)가 패널 UI를 담당. 첫 강화 항목은 가시 함정 슬로우(밟으면 3초간 이동속도 50%, 비용 30G — 벽10/가시15/화염20/폭탄25 대비 가시 설치비의 2배 수준). `Enemy.cs`에 범용 상태 효과(`slowMultiplier`/`slowRemaining`, `ApplySlow()`)를 추가해 이후 다른 함정도 재사용 가능하도록 함. 향후 확장 후보(미구현): Wall HP 강화, FireTrap 틱뎀/체류시간 강화, ExplosiveTrap 범위/데미지 강화, 신규 함정(독/넉백/빙결). 씬 배선(상점 패널 GameObject, 버튼 2개, UpgradeManager 오브젝트 배치) 필요.
+31. #31 상점(강화) 패널 — 개별 오브젝트를 클릭해 강화하는 방식 대신, 패널을 열어 골드로 영구 강화를 구매하는 "테크트리 해금" 방식 채택(구매 즉시 이미 설치된 것 + 앞으로 설치할 것 모두에 적용). `UpgradeManager.cs`(Economy.cs와 동일한 싱글톤 패턴, 씬 재시작 시 인스턴스 필드라 자동 초기화)가 해금 상태/비용을 들고, `ShopPanelUI.cs`(BuildPanelUI.cs와 동일하게 라벨/interactable만 갱신)가 패널 UI를 담당. 첫 강화 항목은 가시 함정 슬로우(밟으면 3초간 이동속도 50%, 비용 30G — 벽10/가시15/화염20/폭탄25 대비 가시 설치비의 2배 수준). `Enemy.cs`에 범용 상태 효과(`slowMultiplier`/`slowRemaining`, `ApplySlow()`)를 추가해 이후 다른 함정도 재사용 가능하도록 함. 씬 배선(상점 패널 GameObject, 버튼, UpgradeManager 오브젝트 배치) 필요.
+32. #32 벽/화염 함정 강화 추가 — "숫자만 올리는 강화는 특색이 없다"는 피드백에 따라 새 행동을 추가하는 방식으로 설계. `UpgradeManager`에 `wallThornCost`/`WallThornUnlocked`/`TryUnlockWallThorn()`(25G)과 `fireSpreadCost`/`FireSpreadUnlocked`/`TryUnlockFireSpread()`(25G)를 같은 패턴으로 추가. 벽은 `Wall.thornDamage` 필드를 신설하고, 적이 벽을 공격하는 유일한 지점(`Enemy.cs`의 `lockedWall.TakeDamage(wallDamage)` 호출부, 근접/원거리 공용)에서 강화가 해금됐으면 공격한 적에게도 즉시 반격 데미지를 준다 — 근접은 사방이 막혔을 때만 벽을 공격하므로 미로 설계 시 적이 스스로 깎이는 효과, 원거리는 벽 근처(사거리 2.5) 상시 공격 습성 때문에 늘 punish받는 효과. 화염 함정은 `FireTrap.spreadRadius`/`spreadDamage` 필드를 신설하고 `OnTriggerStay2D`의 틱 발동 시점에 `SpreadBurn()`을 호출해 트랩에 붙잡힌 적 주변의 다른 적에게도 화상 데미지를 전파(내구도는 추가 소모하지 않음) — `ExplosiveTrap.Explode()`가 이미 쓰던 "Enemy.All 스냅샷 순회" 패턴을 재사용. `ShopPanelUI`는 버튼 2개를 더 받아 반복되는 라벨 갱신 로직을 `RefreshOne()` 헬퍼로 통합. 폭탄 강화(연쇄 폭발)는 이번 라운드에서 보류, 향후 확장 후보로 남김. 씬 배선(버튼 2개 추가, 필드 연결) 필요.
 
 ## 4. 순서를 이렇게 잡은 이유
 - Phase 0~1을 가장 먼저 두는 이유: `Pathfinder`가 없으면 벽/적/함정 어떤 것도 의미 있는 테스트가 안 됨. 마일스톤 B(자동 우회)가 확인되기 전까지는 이후 작업(벽 반응, 배치 UI 등)을 만들어도 검증할 방법이 없음.

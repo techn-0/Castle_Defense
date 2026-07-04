@@ -146,9 +146,12 @@ public class Enemy : MonoBehaviour
             attackTimer -= Time.deltaTime;
             if (attackTimer <= 0f)
             {
+                int thorn = lockedWall.thornDamage;
                 lockedWall.TakeDamage(wallDamage);
                 attackTimer = attackInterval;
                 if (spum != null) spum.PlayAnimation(PlayerState.ATTACK, 0);
+                if (UpgradeManager.I != null && UpgradeManager.I.WallThornUnlocked)
+                    TakeDamage(thorn);
             }
             return;
         }

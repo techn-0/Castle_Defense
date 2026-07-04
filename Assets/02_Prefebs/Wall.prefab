@@ -45,7 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7c27ad414d285a459a442fced8358da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Wall
-  hp: 5
+  hp: 10
+  thornDamage: 1
   hitSfx: {fileID: 0}
   destroySfx: {fileID: 0}
 --- !u!212 &6463277823433851851
