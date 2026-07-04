@@ -10,8 +10,8 @@ public class GameHUD : MonoBehaviour
 
     void Update()
     {
-        goldText.text = $"Gold: {Economy.I.gold}";
-        waveText.text = $"Wave: {waveManager.WaveNumber}/{waveManager.TotalWaves}";
-        castleHpText.text = $"Castle HP: {CastleHealth.I.Hp}/{CastleHealth.I.maxHp}";
+        goldText.text = $"{Economy.I.gold}";
+        waveText.text = $"{waveManager.WaveNumber}/{waveManager.TotalWaves}";
+        castleHpText.text = $"{CastleHealth.I.Hp}/{CastleHealth.I.maxHp}";
     }
 }
