@@ -18,6 +18,7 @@ public class FireTrap : MonoBehaviour
     int maxDurability;
     HealthBar healthBar;
     readonly Dictionary<Enemy, float> tickTimers = new();
+    LineRenderer lureIndicator;
 
     void Awake()
     {
@@ -28,6 +29,8 @@ public class FireTrap : MonoBehaviour
         maxDurability = durability;
         healthBar = GetComponent<HealthBar>();
         if (healthBar == null) healthBar = gameObject.AddComponent<HealthBar>();
+
+        lureIndicator = RangeIndicatorUtil.CreateCircle(transform, lureRadius, BuildManager.LureRangeColor, "LureIndicator");
     }
 
     void OnDestroy()
@@ -44,6 +47,8 @@ public class FireTrap : MonoBehaviour
 
     void Update()
     {
+        lureIndicator.gameObject.SetActive(BuildManager.I != null && BuildManager.I.IsBuildMode);
+
         foreach (var e in Enemy.All)
         {
             // 이미 이 함정을 한 번이라도 다녀간 적은 다시 유인하지 않는다(Enemy.visitedLures로 관리).

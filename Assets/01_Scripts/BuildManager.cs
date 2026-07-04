@@ -5,6 +5,8 @@ public enum BuildMode { None, Wall, Spike, FireTrap, ExplosiveTrap, Demolish }
 
 public class BuildManager : MonoBehaviour
 {
+    public static BuildManager I;
+
     public GameObject wallPrefab;
     public GameObject spikePrefab;
     public GameObject fireTrapPrefab;
@@ -15,6 +17,8 @@ public class BuildManager : MonoBehaviour
     public int spikeCost = 15;
     public int fireTrapCost = 20;
     public int explosiveTrapCost = 25;
+
+    public static readonly Color LureRangeColor = new Color(1f, 0.55f, 0.1f, 0.5f);
 
     BuildMode mode = BuildMode.None;
     TileGrid grid;
@@ -27,10 +31,16 @@ public class BuildManager : MonoBehaviour
 
     void Awake()
     {
+        I = this;
         grid = FindFirstObjectByType<TileGrid>();
         if (cam == null) cam = Camera.main;
 
         previewRoot = new GameObject("BuildPreview").transform;
+    }
+
+    void OnDestroy()
+    {
+        if (I == this) I = null;
     }
 
     void Update()
@@ -130,6 +140,11 @@ public class BuildManager : MonoBehaviour
                 sr.sortingOrder = src.sortingOrder + 100;
                 previewSprites.Add((sr, src.color));
             }
+
+            // 유인형 함정(FireTrap)만 미리보기에 유인 범위 원을 함께 그린다.
+            var fireTrap = prefab.GetComponent<FireTrap>();
+            if (fireTrap != null)
+                RangeIndicatorUtil.CreateCircle(previewRoot, fireTrap.lureRadius, LureRangeColor, "LurePreview", startActive: true);
         }
 
         previewRoot.gameObject.SetActive(mode != BuildMode.None);

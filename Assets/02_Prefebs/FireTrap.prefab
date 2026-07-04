@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ecf74b3fb9894f840b009422e6d6de90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FireTrap
-  lureRadius: 3
+  lureRadius: 4
   tickDamage: 1
   tickInterval: 1
   dwellDuration: 0.5
