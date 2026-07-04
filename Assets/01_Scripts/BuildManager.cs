@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum BuildMode { None, Wall, Spike, FireTrap, ExplosiveTrap }
+public enum BuildMode { None, Wall, Spike, FireTrap, ExplosiveTrap, Demolish }
 
 public class BuildManager : MonoBehaviour
 {
@@ -22,6 +22,9 @@ public class BuildManager : MonoBehaviour
     Transform previewRoot;
     readonly List<(SpriteRenderer sr, Color baseColor)> previewSprites = new();
 
+    GameObject demolishHighlightTarget;
+    readonly List<(SpriteRenderer sr, Color baseColor)> demolishHighlightSprites = new();
+
     void Awake()
     {
         grid = FindFirstObjectByType<TileGrid>();
@@ -38,15 +41,32 @@ public class BuildManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha2)) SetMode(BuildMode.Spike);
         else if (Input.GetKeyDown(KeyCode.Alpha3)) SetMode(BuildMode.FireTrap);
         else if (Input.GetKeyDown(KeyCode.Alpha4)) SetMode(BuildMode.ExplosiveTrap);
+        else if (Input.GetKeyDown(KeyCode.Alpha5)) SetMode(BuildMode.Demolish);
         else if (Input.GetKeyDown(KeyCode.Escape)) SetMode(BuildMode.None);
 
         if (mode == BuildMode.None) return;
+
+        // 우클릭은 어떤 모드에서든 건축 모드 자체를 취소한다.
+        if (Input.GetMouseButtonDown(1))
+        {
+            SetMode(BuildMode.None);
+            return;
+        }
 
         Vector3 screen = Input.mousePosition;
         screen.z = -cam.transform.position.z;
         Vector3 world = cam.ScreenToWorldPoint(screen);
         world.z = 0f;
         Vector3Int cell = grid.WorldToCell(world);
+
+        if (mode == BuildMode.Demolish)
+        {
+            bool canDemolish = CanDemolish(cell);
+            UpdateDemolishHighlight(canDemolish ? StructureAt(cell) : null);
+            if (canDemolish && Input.GetMouseButtonDown(0)) Demolish(cell);
+            return;
+        }
+
         bool valid = CanPlace(cell);
 
         previewRoot.position = grid.CellToWorld(cell);
@@ -61,6 +81,7 @@ public class BuildManager : MonoBehaviour
     public void SelectSpike() => SetMode(BuildMode.Spike);
     public void SelectFireTrap() => SetMode(BuildMode.FireTrap);
     public void SelectExplosiveTrap() => SetMode(BuildMode.ExplosiveTrap);
+    public void SelectDemolish() => SetMode(BuildMode.Demolish);
     public void SelectNone() => SetMode(BuildMode.None);
 
     GameObject PrefabFor(BuildMode m) => m switch
@@ -84,6 +105,8 @@ public class BuildManager : MonoBehaviour
     void SetMode(BuildMode m)
     {
         mode = m;
+
+        UpdateDemolishHighlight(null);
 
         foreach (Transform child in previewRoot) Destroy(child.gameObject);
         previewSprites.Clear();
@@ -141,5 +164,54 @@ public class BuildManager : MonoBehaviour
         // Wall.Awake()는 점유 등록만 하고 재계산은 안 하므로(씬 시작 시점 벽과 구분하기 위해),
         // 런타임 배치는 이 콜사이트에서 명시적으로 재계산을 트리거해야 한다.
         if (mode == BuildMode.Wall) Pathfinder.I.Recompute();
+    }
+
+    GameObject StructureAt(Vector3Int cell)
+    {
+        if (Wall.ByCell.TryGetValue(cell, out var wall)) return wall.gameObject;
+        if (Spike.ByCell.TryGetValue(cell, out var spike)) return spike.gameObject;
+        if (FireTrap.ByCell.TryGetValue(cell, out var fireTrap)) return fireTrap.gameObject;
+        if (ExplosiveTrap.ByCell.TryGetValue(cell, out var explosiveTrap)) return explosiveTrap.gameObject;
+        return null;
+    }
+
+    bool CanDemolish(Vector3Int cell)
+    {
+        if (!grid.InBounds(cell)) return false;
+        if (Player.I != null)
+        {
+            float sqr = ((Vector2)grid.CellToWorld(cell) - (Vector2)Player.I.transform.position).sqrMagnitude;
+            if (sqr > Player.I.buildRange * Player.I.buildRange) return false;
+        }
+        return StructureAt(cell) != null;
+    }
+
+    // 철거 대상 위에 커서가 있을 때 빨갛게 표시한다 — 별도 프리팹 없이 대상 오브젝트의
+    // 스프라이트 색을 그대로 덧칠했다가(target이 바뀌거나 모드를 벗어나면) 원래 색으로 되돌린다.
+    void UpdateDemolishHighlight(GameObject target)
+    {
+        if (target == demolishHighlightTarget) return;
+
+        foreach (var (sr, baseColor) in demolishHighlightSprites)
+            if (sr != null) sr.color = baseColor;
+        demolishHighlightSprites.Clear();
+        demolishHighlightTarget = target;
+
+        if (target == null) return;
+        foreach (var sr in target.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            demolishHighlightSprites.Add((sr, sr.color));
+            sr.color = new Color(1f, 0.3f, 0.3f, sr.color.a);
+        }
+    }
+
+    // 철거는 환불 없이 즉시 파괴만 한다 — 각 구조물의 OnDestroy가 타일 점유 해제/
+    // 경로 재계산/유인 해제 등 자기 몫의 정리를 알아서 처리한다.
+    void Demolish(Vector3Int cell)
+    {
+        var target = StructureAt(cell);
+        if (target == null) return;
+        UpdateDemolishHighlight(null);
+        Destroy(target);
     }
 }

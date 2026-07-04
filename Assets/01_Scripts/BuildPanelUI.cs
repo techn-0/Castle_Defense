@@ -8,6 +8,7 @@ public class BuildPanelUI : MonoBehaviour
     public TMP_Text spikeButtonLabel;
     public TMP_Text fireTrapButtonLabel;
     public TMP_Text explosiveTrapButtonLabel;
+    public TMP_Text demolishButtonLabel;
 
     void Start()
     {
@@ -15,5 +16,6 @@ public class BuildPanelUI : MonoBehaviour
         spikeButtonLabel.text = $"가시 함정 ({buildManager.spikeCost}G)";
         fireTrapButtonLabel.text = $"화염 함정 ({buildManager.fireTrapCost}G)";
         explosiveTrapButtonLabel.text = $"폭탄 ({buildManager.explosiveTrapCost}G)";
+        if (demolishButtonLabel != null) demolishButtonLabel.text = "철거";
     }
 }
