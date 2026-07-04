@@ -48,12 +48,18 @@ public class Enemy : MonoBehaviour
     Wall lockedWall;
     float attackTimer;
 
-    void Awake() { All.Add(this); }
+    // grid는 Awake에서 바로 채워둔다 — Start까지 미루면, 같은 프레임에 다른 오브젝트의
+    // Update(예: FireTrap.Update가 Enemy.All을 순회)가 이 적의 Start보다 먼저 실행될 때
+    // grid가 아직 null이라 NullReferenceException이 난다.
+    void Awake()
+    {
+        All.Add(this);
+        grid = Pathfinder.I.grid;
+    }
     void OnDestroy() { All.Remove(this); }
 
     void Start()
     {
-        grid = Pathfinder.I.grid;
         currentCell = grid.WorldToCell(transform.position);
         transform.position = grid.CellToWorld(currentCell);
         hp = maxHp;

@@ -12,6 +12,9 @@ public static class EffectsUtil
         go.transform.position = pos;
 
         var ps = go.AddComponent<ParticleSystem>();
+        // AddComponent는 playOnAwake 기본값(true) 때문에 즉시 재생을 시작해버려서,
+        // 바로 이어지는 main.duration 등의 설정이 "재생 중 변경" 에러를 낸다 — 먼저 멈춘 뒤 설정한다.
+        ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         var main = ps.main;
         main.duration = life;
         main.loop = false;
