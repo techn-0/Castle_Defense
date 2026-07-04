@@ -6034,7 +6034,7 @@ MonoBehaviour:
   speed: 2
   damage: 2
   maxHp: 5
-  goldReward: 2
+  goldReward: 5
   wallDamage: 1
   attackInterval: 0.6
   rangedScanRadius: 2.5

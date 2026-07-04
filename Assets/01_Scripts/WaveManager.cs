@@ -67,58 +67,39 @@ public class WaveManager : MonoBehaviour
         StartCoroutine(SpawnWave(waves[waveIndex]));
     }
 
-    // 근접/원거리/닌자 등 entry들이 블록으로 몰리지 않고 섞여 나오도록, entry별 개별 타이머를 두고
-    // 매 프레임 라운드로빈으로 스폰한다. entry.interval은 "최소 간격 하한"으로 재해석되고,
-    // 실제 간격은 phaseDuration에 걸쳐 고르게 분산되도록 계산한다.
+    // 몹 종류를 "남은 수량에 비례한 확률"로 뽑아 고정 간격(spawnInterval)마다 한 마리씩
+    // 끊임없이 스폰한다. 매번 완전히 독립적인 확률로 뽑으면 count=1인 보스가 아예 안 나오거나
+    // 여러 번 나올 수 있어서, 뽑힌 만큼 그 종류의 남은 수량을 줄여나가는 "복원 없는 가중 추첨"
+    // 방식을 쓴다 — 순서는 랜덤하게 섞이면서도 웨이브가 끝날 때까지 각 종류가 정확히
+    // authored된 count만큼만 나오는 걸 보장한다.
     IEnumerator SpawnWave(WaveData wave)
     {
         spawning = true;
 
         int entryCount = wave.entries.Length;
-        if (entryCount == 0) { spawning = false; yield break; }
-
-        int totalCount = 0;
-        foreach (var e in wave.entries) totalCount += e.count;
-
-        float duration = wave.phaseDuration > 0f ? wave.phaseDuration : EstimateFallbackDuration(wave);
-
         var remaining = new int[entryCount];
-        var gaps = new float[entryCount];
-        var timers = new float[entryCount];
+        int totalRemaining = 0;
         for (int i = 0; i < entryCount; i++)
         {
             remaining[i] = wave.entries[i].count;
-            float evenGap = totalCount > 0 ? duration / totalCount : wave.entries[i].interval;
-            gaps[i] = Mathf.Max(wave.entries[i].interval, evenGap);
-            timers[i] = 0f;
+            totalRemaining += remaining[i];
         }
 
-        int aliveEntries = entryCount;
-        while (aliveEntries > 0)
+        while (totalRemaining > 0)
         {
-            for (int i = 0; i < entryCount; i++)
-            {
-                if (remaining[i] <= 0) continue;
-                timers[i] -= Time.deltaTime;
-                if (timers[i] <= 0f)
-                {
-                    SpawnOne(wave.entries[i]);
-                    remaining[i]--;
-                    timers[i] = gaps[i];
-                    if (remaining[i] <= 0) aliveEntries--;
-                }
-            }
-            yield return null;
+            int pick = Random.Range(0, totalRemaining);
+            int idx = 0;
+            int acc = remaining[0];
+            while (pick >= acc) acc += remaining[++idx];
+
+            SpawnOne(wave.entries[idx]);
+            remaining[idx]--;
+            totalRemaining--;
+
+            yield return new WaitForSeconds(wave.spawnInterval);
         }
 
         spawning = false;
-    }
-
-    float EstimateFallbackDuration(WaveData wave)
-    {
-        float sum = 0f;
-        foreach (var e in wave.entries) sum += e.count * e.interval;
-        return sum;
     }
 
     void SpawnOne(WaveData.SpawnEntry entry)
