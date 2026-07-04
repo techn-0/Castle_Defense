@@ -17,6 +17,7 @@ public class BuildManager : MonoBehaviour
     public int spikeCost = 15;
     public int fireTrapCost = 20;
     public int explosiveTrapCost = 25;
+    public float costMultiplier = 1f; // 강화: 건설 비용 할인
 
     public static readonly Color LureRangeColor = new Color(1f, 0.55f, 0.1f, 0.5f);
 
@@ -45,7 +46,9 @@ public class BuildManager : MonoBehaviour
 
     void Update()
     {
-        if (!GameManager.I.IsPlaying) return;
+        // Time.timeScale == 0f: 웨이브 클리어 후 강화 선택 패널이 떠 있는 동안(UpgradeChoiceManager) —
+        // GameManager.IsPlaying은 여전히 true이므로 별도로 막아야 한다.
+        if (!GameManager.I.IsPlaying || Time.timeScale == 0f) return;
 
         if (Input.GetKeyDown(KeyCode.Alpha1)) SetMode(BuildMode.Wall);
         else if (Input.GetKeyDown(KeyCode.Alpha2)) SetMode(BuildMode.Spike);
@@ -103,14 +106,18 @@ public class BuildManager : MonoBehaviour
         _ => null,
     };
 
-    int CostFor(BuildMode m) => m switch
+    int CostFor(BuildMode m)
     {
-        BuildMode.Wall => wallCost,
-        BuildMode.Spike => spikeCost,
-        BuildMode.FireTrap => fireTrapCost,
-        BuildMode.ExplosiveTrap => explosiveTrapCost,
-        _ => 0,
-    };
+        int baseCost = m switch
+        {
+            BuildMode.Wall => wallCost,
+            BuildMode.Spike => spikeCost,
+            BuildMode.FireTrap => fireTrapCost,
+            BuildMode.ExplosiveTrap => explosiveTrapCost,
+            _ => 0,
+        };
+        return Mathf.RoundToInt(baseCost * costMultiplier);
+    }
 
     void SetMode(BuildMode m)
     {

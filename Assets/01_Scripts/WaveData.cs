@@ -20,4 +20,8 @@ public class WaveData : ScriptableObject
     }
 
     public SpawnEntry[] entries;
+
+    // 이 웨이브가 목표로 하는 총 스폰 지속 시간(초). 0(미설정)이면 WaveManager가
+    // entry들의 count*interval 합으로 자동 폴백한다.
+    public float phaseDuration = 45f;
 }

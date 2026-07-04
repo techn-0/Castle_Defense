@@ -1,23 +1,40 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-// Player 전용 투사체. 물리 콜라이더 없이 타겟 참조 + 거리 판정만으로 동작한다
-// (Enemy 이동부의 MoveTowards + sqrMagnitude 도착 판정과 동일한 스타일).
+// Player 전용 투사체. 고정 방향으로 직선 이동하며, 물리 트리거로 충돌을 판정한다
+// (호밍 방식이었을 때는 위치 비교로 "도착"을 판정했지만, 고정 방향에서는 그 개념이
+// 없으므로 실제 Collider2D(Trigger) + Rigidbody2D(Kinematic)가 프리팹에 있어야 한다).
+[RequireComponent(typeof(Rigidbody2D))]
 public class Projectile : MonoBehaviour
 {
     public float maxLifetime = 3f;
 
-    Enemy target;
+    Vector2 direction;
     float speed;
     int damage;
+    int pierceRemaining;
+    bool splash;
+    float splashRadius;
+    int splashDamage;
     float lifeTimer;
 
-    public void Init(Enemy target, float speed, int damage)
+    public void Init(Vector2 direction, float speed, int damage, int pierceCount = 0, bool splash = false, float splashRadius = 1.2f, int splashDamage = 1)
     {
-        this.target = target;
+        this.direction = direction.normalized;
         this.speed = speed;
         this.damage = damage;
+        this.pierceRemaining = pierceCount;
+        this.splash = splash;
+        this.splashRadius = splashRadius;
+        this.splashDamage = splashDamage;
 
-        if (target != null) FaceTarget(target.transform.position);
+        // 호밍이 아니므로 회전은 스폰 시 한 번만 정하면 된다.
+        float angle = Mathf.Atan2(this.direction.y, this.direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+        // 사거리 강화가 누적될수록 화면 밖으로 더 오래 날아갈 수 있어 고정값 대신 여유를 둔다.
+        if (Player.I != null && speed > 0f)
+            maxLifetime = Mathf.Max(maxLifetime, Player.I.attackRange / speed * 1.5f);
     }
 
     void Update()
@@ -25,28 +42,33 @@ public class Projectile : MonoBehaviour
         lifeTimer += Time.deltaTime;
         if (lifeTimer > maxLifetime) { Destroy(gameObject); return; }
 
-        // 타겟이 비행 중 다른 수단으로 파괴됐다면(Unity의 == 오버라이드로 null 비교가 정상 동작) 조용히 자폭.
-        if (target == null) { Destroy(gameObject); return; }
-
-        Vector3 dest = target.transform.position;
-        FaceTarget(dest);
-        transform.position = Vector2.MoveTowards(transform.position, dest, speed * Time.deltaTime);
-
-        if (((Vector2)transform.position - (Vector2)dest).sqrMagnitude < 0.01f)
-        {
-            target.TakeDamage(damage);
-            Destroy(gameObject);
-        }
+        transform.position += (Vector3)(direction * speed * Time.deltaTime);
     }
 
-    // 타겟이 매 프레임 움직이므로(호밍) 화살촉이 계속 이동 방향을 향하도록 매 프레임 갱신한다.
-    // 화살 비주얼(자식)이 이미 "부모 기준 오른쪽을 바라볼 때"에 맞춘 로컬 회전 보정값을 갖고 있으므로,
-    // 루트만 이동 방향으로 돌리면 된다.
-    void FaceTarget(Vector3 dest)
+    void OnTriggerEnter2D(Collider2D other)
     {
-        Vector2 dir = (Vector2)dest - (Vector2)transform.position;
-        if (dir.sqrMagnitude < 0.0001f) return;
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.Euler(0f, 0f, angle);
+        var enemy = other.GetComponent<Enemy>();
+        if (enemy == null) return;
+
+        enemy.TakeDamage(damage);
+        if (splash) ApplySplash(enemy);
+
+        if (pierceRemaining > 0)
+        {
+            pierceRemaining--;
+            return; // 파괴하지 않고 계속 직진해 다른 적을 추가로 맞힌다.
+        }
+
+        Destroy(gameObject);
+    }
+
+    void ApplySplash(Enemy hitEnemy)
+    {
+        foreach (var e in new List<Enemy>(Enemy.All))
+        {
+            if (e == hitEnemy) continue;
+            float sqr = ((Vector2)e.transform.position - (Vector2)transform.position).sqrMagnitude;
+            if (sqr < splashRadius * splashRadius) e.TakeDamage(splashDamage);
+        }
     }
 }

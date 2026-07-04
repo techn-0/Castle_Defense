@@ -16,10 +16,11 @@ MonoBehaviour:
   - enemyPrefab: {fileID: 4668328802031923636, guid: a01c6fcb48f169d4695db2e5823a1954,
       type: 3}
     kind: 0
-    count: 3
+    count: 5
     interval: 1
   - enemyPrefab: {fileID: 4668328802031923636, guid: a01c6fcb48f169d4695db2e5823a1954,
       type: 3}
     kind: 0
-    count: 3
+    count: 5
     interval: 1
+  phaseDuration: 65

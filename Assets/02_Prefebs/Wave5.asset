@@ -16,7 +16,7 @@ MonoBehaviour:
   - enemyPrefab: {fileID: 4668328802031923636, guid: a01c6fcb48f169d4695db2e5823a1954,
       type: 3}
     kind: 0
-    count: 3
+    count: 5
     interval: 0.6
     hpOverride: 0
     speedOverride: 0
@@ -25,7 +25,7 @@ MonoBehaviour:
   - enemyPrefab: {fileID: 4711577484832226095, guid: fe87028166426c24abe9702f962ba6d1,
       type: 3}
     kind: 1
-    count: 2
+    count: 4
     interval: 0.8
     hpOverride: 0
     speedOverride: 0
@@ -40,3 +40,4 @@ MonoBehaviour:
     speedOverride: 1.2
     goldOverride: 100
     sizeMultiplier: 1.8
+  phaseDuration: 90

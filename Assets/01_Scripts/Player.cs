@@ -14,8 +14,12 @@ public class Player : MonoBehaviour
 
     public GameObject projectilePrefab;
     public float projectileSpeed = 8f;
-    public int projectileCount = 1; // 차후 업그레이드 훅 — Economy로 구매 시 이 값만 늘리면 다중 발사 동작
+    public int projectileCount = 1; // 강화로 증가 — 부채꼴 다중 발사
     public float spreadAngle = 15f; // projectileCount > 1일 때 발사 간 각도 간격
+    public int projectilePierce = 0; // 강화: 관통 사격
+    public bool projectileSplash = false; // 강화: 스플래시 사격
+    public float splashRadius = 1.2f;
+    public int splashDamage = 1;
 
     Enemy currentTarget;
     float attackTimer;
@@ -57,7 +61,9 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        if (!GameManager.I.IsPlaying) return;
+        // Time.timeScale == 0f: 웨이브 클리어 후 강화 선택 패널이 떠 있는 동안(UpgradeChoiceManager) —
+        // GameManager.IsPlaying은 여전히 true이므로 별도로 막아야 한다.
+        if (!GameManager.I.IsPlaying || Time.timeScale == 0f) return;
 
         Move();
         AutoAttack();
@@ -119,22 +125,36 @@ public class Player : MonoBehaviour
         return nearest;
     }
 
-    // projectileCount > 1은 구조만 마련해둠 — 투사체가 타겟을 계속 추적(homing)하는 방식이라
-    // 각도를 줘도 결국 같은 지점에 수렴하므로, 실제 "부채꼴 발사"를 구현하려면 차후 업그레이드 때
-    // Projectile을 고정 방향 직선 이동으로 바꿔야 한다. 지금은 같은 타겟에 N발을 겹쳐 쏘는 정도로만 동작.
+    // 타겟 방향을 기준으로 spreadAngle씩 좌우로 벌린 projectileCount개 방향에 고정 방향 투사체를 쏜다.
+    // count=1이면 정면 1발, count=3이면 -spread/0/+spread 3발.
     void Fire(Enemy target)
     {
         if (projectilePrefab == null) return;
 
+        Vector2 baseDir = (Vector2)target.transform.position - (Vector2)transform.position;
+        if (baseDir.sqrMagnitude < 0.0001f) baseDir = Vector2.right;
+        baseDir.Normalize();
+
+        float startAngle = -(projectileCount - 1) * spreadAngle * 0.5f;
         for (int i = 0; i < projectileCount; i++)
-            SpawnProjectile(target);
+        {
+            float angle = startAngle + i * spreadAngle;
+            SpawnProjectile(Rotate(baseDir, angle));
+        }
     }
 
-    void SpawnProjectile(Enemy target)
+    void SpawnProjectile(Vector2 direction)
     {
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         var proj = go.GetComponent<Projectile>();
-        proj.Init(target, projectileSpeed, attackDamage);
+        proj.Init(direction, projectileSpeed, attackDamage, projectilePierce, projectileSplash, splashRadius, splashDamage);
+    }
+
+    static Vector2 Rotate(Vector2 v, float degrees)
+    {
+        float rad = degrees * Mathf.Deg2Rad;
+        float cos = Mathf.Cos(rad), sin = Mathf.Sin(rad);
+        return new Vector2(v.x * cos - v.y * sin, v.x * sin + v.y * cos);
     }
 
     void BuildRangeIndicator()

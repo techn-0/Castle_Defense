@@ -15,4 +15,10 @@ public class CastleHealth : MonoBehaviour
         hp -= dmg;
         if (hp <= 0) GameManager.I.GameOver();
     }
+
+    public void Heal(int amount)
+    {
+        if (hp <= 0) return;
+        hp = Mathf.Min(maxHp, hp + amount);
+    }
 }
