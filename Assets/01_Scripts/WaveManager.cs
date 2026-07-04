@@ -20,6 +20,8 @@ public class WaveManager : MonoBehaviour
 
     public int WaveNumber => waveIndex + 1;
     public int TotalWaves => waves.Length;
+    public bool WaveActive => waveActive;
+    public float PrepTimeRemaining => waveActive ? 0f : Mathf.Max(0f, prepTimer);
 
     void Update()
     {

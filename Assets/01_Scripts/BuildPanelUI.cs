@@ -19,9 +19,9 @@ public class BuildPanelUI : MonoBehaviour
     // 매 프레임 다시 계산해서 표시한다(정적으로 한 번만 찍으면 강화 후 표기가 갱신되지 않음).
     void Update()
     {
-        wallButtonLabel.text = $"벽 ({buildManager.CostFor(BuildMode.Wall)}G)";
+        wallButtonLabel.text = $"방벽 ({buildManager.CostFor(BuildMode.Wall)}G)";
         spikeButtonLabel.text = $"가시 함정 ({buildManager.CostFor(BuildMode.Spike)}G)";
-        fireTrapButtonLabel.text = $"화염 함정 ({buildManager.CostFor(BuildMode.FireTrap)}G)";
+        fireTrapButtonLabel.text = $"유인 함정 ({buildManager.CostFor(BuildMode.FireTrap)}G)";
         explosiveTrapButtonLabel.text = $"폭탄 ({buildManager.CostFor(BuildMode.ExplosiveTrap)}G)";
     }
 }

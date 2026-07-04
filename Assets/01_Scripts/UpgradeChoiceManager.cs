@@ -23,7 +23,7 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "atk_dmg",
-            title = "공격력 +1",
+            title = "공격력 증가",
             description = "플레이어 공격력이 1 증가합니다.",
             maxStacks = 5,
             apply = () => Player.I.attackDamage += 1,
@@ -32,8 +32,8 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "atk_speed",
-            title = "공격속도 +15%",
-            description = "공격 간격이 15% 감소합니다.",
+            title = "공격속도 증가",
+            description = "공격속도가 15% 증가합니다.",
             maxStacks = 5,
             apply = () => Player.I.attackInterval = Mathf.Max(0.08f, Player.I.attackInterval * 0.85f),
         });
@@ -41,8 +41,8 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "atk_range",
-            title = "사거리 +1.0",
-            description = "공격 사거리가 증가합니다.",
+            title = "사거리 증가",
+            description = "공격 사거리가 1 증가합니다.",
             maxStacks = 4,
             apply = () => Player.I.attackRange += 1.0f,
         });
@@ -50,8 +50,8 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "move_speed",
-            title = "이동속도 +0.5",
-            description = "이동속도가 증가합니다.",
+            title = "이동속도 증가",
+            description = "이동속도가 0.5증가합니다.",
             maxStacks = 4,
             apply = () => Player.I.moveSpeed += 0.5f,
         });
@@ -59,7 +59,7 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "proj_speed",
-            title = "투사체 속도 +2",
+            title = "빠른 화살",
             description = "화살이 더 빠르게 날아갑니다.",
             maxStacks = 3,
             apply = () => Player.I.projectileSpeed += 2f,
@@ -68,7 +68,7 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "multi_shot",
-            title = "다중 발사",
+            title = "일석이조",
             description = "화살을 한 발 더 발사합니다.",
             maxStacks = 2, // 1 -> 2 -> 3발
             apply = () => Player.I.projectileCount += 1,
@@ -86,7 +86,7 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "splash",
-            title = "스플래시 사격",
+            title = "폭탄화살",
             description = "화살이 명중 지점 주변에도 추가 피해를 줍니다.",
             maxStacks = 1,
             apply = () => Player.I.projectileSplash = true,
@@ -95,8 +95,8 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "gold_gain",
-            title = "골드 획득 +20%",
-            description = "획득하는 골드가 증가합니다.",
+            title = "골드 획득 증가",
+            description = "획득하는 골드가 20% 증가합니다.",
             maxStacks = 3,
             apply = () => Economy.I.goldMultiplier += 0.2f,
         });
@@ -104,8 +104,8 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "build_discount",
-            title = "건설 비용 -10%",
-            description = "벽/함정 건설 비용이 감소합니다.",
+            title = "건설 비용 감소",
+            description = "벽/함정 건설 비용이 10% 감소합니다.",
             maxStacks = 3,
             apply = () => BuildManager.I.costMultiplier = Mathf.Max(0.3f, BuildManager.I.costMultiplier - 0.1f),
         });
@@ -113,7 +113,7 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "castle_heal",
-            title = "성벽 응급 보수",
+            title = "성벽 보수",
             description = "성 체력을 즉시 5 회복합니다.",
             maxStacks = int.MaxValue, // 성 체력이 깎일 때마다 다시 노출 가능 — canOfferOverride로 실질 제한
             canOfferOverride = () => CastleHealth.I.Hp < CastleHealth.I.maxHp,
@@ -133,8 +133,8 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "wall_thorn",
-            title = "벽: 가시 반격",
-            description = "벽을 공격한 적에게 반격 피해를 줍니다.",
+            title = "방벽: 가시 반격",
+            description = "방벽을 공격한 적에게 반격 피해를 줍니다.",
             maxStacks = 1,
             canOfferOverride = () => !UpgradeManager.I.WallThornUnlocked,
             apply = () => UpgradeManager.I.UnlockWallThorn(),
@@ -143,8 +143,8 @@ public class UpgradeChoiceManager : MonoBehaviour
         pool.Add(new UpgradeOption
         {
             id = "fire_spread",
-            title = "화염 함정: 지속 화상",
-            description = "화염 함정에서 벗어나도 화상 피해가 지속됩니다.",
+            title = "유인 함정: 지속 화상",
+            description = "유인 함정에 닿으면 화상 피해가 지속됩니다.",
             maxStacks = 1,
             canOfferOverride = () => !UpgradeManager.I.FireSpreadUnlocked,
             apply = () => UpgradeManager.I.UnlockFireSpread(),
