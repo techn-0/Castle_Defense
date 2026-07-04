@@ -7,6 +7,8 @@ public class Spike : MonoBehaviour
 
     public int damage = 1;
     public int durability = 3;
+    public float slowMultiplier = 0.5f;
+    public float slowDuration = 3f;
     public AudioClip hitSfx;
     public AudioClip destroySfx;
 
@@ -38,6 +40,8 @@ public class Spike : MonoBehaviour
         if (enemy == null) return;
 
         enemy.TakeDamage(damage);
+        if (UpgradeManager.I != null && UpgradeManager.I.SpikeSlowUnlocked)
+            enemy.ApplySlow(slowMultiplier, slowDuration);
         durability--;
         if (durability <= 0)
         {

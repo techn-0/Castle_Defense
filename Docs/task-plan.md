@@ -31,6 +31,10 @@
 | 25 | 제출물 | 시연 영상 3분, PDF 리포트, ZIP 빌드 | 필수 | 마지막 날 |
 | 26 | 플레이어 | 로그라이크 플레이어 — WASD 자유 이동, 사거리 내 최근접 적 자동 타겟팅 + 화살 투사체 발사, 건설 범위를 플레이어 주변으로 제한 + 원형 인디케이터, 카메라 추적 (완료 — 씬/프리팹 배선까지) | 확장(선택) | 신규 (Player.cs, Projectile.cs, CameraFollow.cs) + 재사용 (BuildManager.CanPlace, Enemy.FindWallInRange 패턴) |
 | 27 | 플레이어 | 골드로 플레이어 강화 (예: 투사체 3갈래 발사) | 확장(선택) | 미착수 — projectileCount/spreadAngle 필드만 훅으로 마련됨 |
+| 28 | 배치 | 건축 모드 우클릭 취소 — 어떤 배치 모드든 우클릭 한 번으로 즉시 취소 | 필수 | 신규 (BuildManager.Update) |
+| 29 | 배치 | 철거(Demolish) 기능 — 키보드 5로 철거 모드 진입, 클릭한 칸의 벽/함정을 환불 없이 즉시 파괴, 대상 위 커서 시 빨간 하이라이트 | 필수 | 신규 (BuildManager, BuildPanelUI) |
+| 30 | 버그 수정 | 적이 이동 중(목표 칸 도착 전) 그 칸에 새로 놓인 벽을 뚫고 지나가던 문제 수정 — 매 프레임 목표 칸 점유 여부 재검사 + 벽/함정을 적이 현재 서 있는 칸에는 배치 불가 처리 | 필수 | 재작성 (Enemy.cs, BuildManager.CanPlace) |
+| 31 | 로그라이크 | 강화 시스템 도입 — 상점(강화) 패널에서 골드로 영구 강화 구매, 가시 함정 강화(밟으면 3초 슬로우, 30G) 최초 적용 | 확장(선택) | 신규 (UpgradeManager.cs, ShopPanelUI.cs) + 재사용 (Economy 싱글톤 패턴, BuildPanelUI 라벨 갱신 패턴) |
 
 ## 2. 시스템 단위 그룹
 
@@ -128,6 +132,14 @@
     - `BuildManager.CanPlace()`에 플레이어 반경 체크 한 줄 추가 + `IsBuildMode` getter 추가 — 기존 미리보기 흰/빨강 틴트가 그대로 반영되어 별도 UI 불필요
     - 씬 배선: 기존 SPUM 리그 `Player.prefab`(이미 씬에 배치돼 있던 것) 루트에 `Player` 컴포넌트 직접 부착, `Projectile.prefab` 신규 생성("PF Village Props - Arrow" 비주얼 자식으로 유저가 교체) 후 `Player.projectilePrefab`에 연결, Main Camera에 `CameraFollow` 부착 — 전부 프리팹/씬 파일 직접 편집으로 완료
     - 남은 것: #27 업그레이드 시스템(골드로 `projectileCount`/`spreadAngle` 등 구매) 미착수. 현재 `Projectile`은 타겟을 계속 추적하는 호밍 방식이라 `projectileCount > 1`을 켜도 여러 발이 같은 지점에 수렴함 — 실제 "부채꼴 발사"를 구현하려면 그때 가서 고정 방향 직선 이동으로 바꿔야 함
+
+### Phase 9 — 배치 UX 보완 + 버그 수정 (완료)
+28. #28 건축 모드 우클릭 취소 — `BuildManager.Update()`에서 모드가 `None`이 아닐 때 우클릭(`GetMouseButtonDown(1)`)을 감지하면 `SetMode(BuildMode.None)`으로 즉시 취소. 키보드 1~5/Esc와 별개로 언제나 동작.
+29. #29 철거(Demolish) 기능 — `BuildMode.Demolish` 신설, 키보드 `5`로 진입. 셀에 놓인 Wall/Spike/FireTrap/ExplosiveTrap을 `ByCell` 딕셔너리로 찾아 `Destroy()`만 호출하는 방식으로 최대한 단순하게 구현(요청대로 환불 없음) — 각 구조물의 기존 `OnDestroy()`가 타일 점유 해제·경로 재계산·유인 해제를 알아서 처리하므로 철거 쪽에 별도 정리 코드가 필요 없었음. 별도 프리팹/에셋 없이 대상 오브젝트의 스프라이트 색을 빨갛게 덧칠하는 방식으로 최소한의 커서 하이라이트만 추가. `BuildPanelUI`에 `demolishButtonLabel` 필드 추가("철거" 텍스트) — 버튼 GameObject 자체는 기존 화염/폭탄 버튼처럼 씬에서 직접 배선 필요(선택 사항, 키보드 5만으로도 동작).
+30. #30 버그 수정: 적이 벽을 뚫고 이동 — 원인은 `Enemy.PickNext()`가 도착 시점에만 다음 목표를 재계산해서, 적이 이미 목표로 정한 칸에 이동 도중 새 벽이 세워지면 재검사 없이 그 칸으로 계속 걸어 들어갔던 것(도착 후에야 우회가 반영됨). `Enemy.Update()`의 이동 분기에 매 프레임 `grid.IsOccupied(targetCell)` 재검사를 추가해, 이동 중 목표 칸이 점유되면 즉시 목표를 무효화하고 `PickNext()`를 다시 호출하도록 수정(닌자는 원래 벽을 무시하는 설계라 예외). 근본 원인 예방 차원에서 `BuildManager.CanPlace()`에도 적이 현재 서 있는 칸에는 벽/함정을 배치할 수 없도록 검사 추가. `Enemy.CurrentCell` 공개 프로퍼티 신설.
+
+### Phase 10 — 로그라이크 강화 시스템 (코드 작업 완료 — 씬 배선 대기 중)
+31. #31 상점(강화) 패널 — 개별 오브젝트를 클릭해 강화하는 방식 대신, 패널을 열어 골드로 영구 강화를 구매하는 "테크트리 해금" 방식 채택(구매 즉시 이미 설치된 것 + 앞으로 설치할 것 모두에 적용). `UpgradeManager.cs`(Economy.cs와 동일한 싱글톤 패턴, 씬 재시작 시 인스턴스 필드라 자동 초기화)가 해금 상태/비용을 들고, `ShopPanelUI.cs`(BuildPanelUI.cs와 동일하게 라벨/interactable만 갱신)가 패널 UI를 담당. 첫 강화 항목은 가시 함정 슬로우(밟으면 3초간 이동속도 50%, 비용 30G — 벽10/가시15/화염20/폭탄25 대비 가시 설치비의 2배 수준). `Enemy.cs`에 범용 상태 효과(`slowMultiplier`/`slowRemaining`, `ApplySlow()`)를 추가해 이후 다른 함정도 재사용 가능하도록 함. 향후 확장 후보(미구현): Wall HP 강화, FireTrap 틱뎀/체류시간 강화, ExplosiveTrap 범위/데미지 강화, 신규 함정(독/넉백/빙결). 씬 배선(상점 패널 GameObject, 버튼 2개, UpgradeManager 오브젝트 배치) 필요.
 
 ## 4. 순서를 이렇게 잡은 이유
 - Phase 0~1을 가장 먼저 두는 이유: `Pathfinder`가 없으면 벽/적/함정 어떤 것도 의미 있는 테스트가 안 됨. 마일스톤 B(자동 우회)가 확인되기 전까지는 이후 작업(벽 반응, 배치 UI 등)을 만들어도 검증할 방법이 없음.

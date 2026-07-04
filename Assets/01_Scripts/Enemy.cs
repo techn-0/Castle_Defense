@@ -49,6 +49,9 @@ public class Enemy : MonoBehaviour
     Wall lockedWall;
     float attackTimer;
 
+    float slowMultiplier = 1f;
+    float slowRemaining = 0f;
+
     // grid는 Awake에서 바로 채워둔다 — Start까지 미루면, 같은 프레임에 다른 오브젝트의
     // Update(예: FireTrap.Update가 Enemy.All을 순회)가 이 적의 Start보다 먼저 실행될 때
     // grid가 아직 null이라 NullReferenceException이 난다.
@@ -97,6 +100,12 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
+        if (slowRemaining > 0f)
+        {
+            slowRemaining -= Time.deltaTime;
+            if (slowRemaining <= 0f) slowMultiplier = 1f;
+        }
+
         if (luredBy != null)
         {
             if (targetCell == null)
@@ -117,7 +126,7 @@ public class Enemy : MonoBehaviour
             SetSpumMoving(true);
             Vector3 lureDest = grid.CellToWorld(targetCell.Value);
             FaceTowards(lureDest);
-            transform.position = Vector2.MoveTowards(transform.position, lureDest, speed * Time.deltaTime);
+            transform.position = Vector2.MoveTowards(transform.position, lureDest, speed * slowMultiplier * Time.deltaTime);
             if (((Vector2)transform.position - (Vector2)lureDest).sqrMagnitude < 0.0001f)
             {
                 currentCell = targetCell.Value;
@@ -160,7 +169,7 @@ public class Enemy : MonoBehaviour
         SetSpumMoving(true);
         Vector3 dest = grid.CellToWorld(targetCell.Value);
         FaceTowards(dest);
-        transform.position = Vector2.MoveTowards(transform.position, dest, speed * Time.deltaTime);
+        transform.position = Vector2.MoveTowards(transform.position, dest, speed * slowMultiplier * Time.deltaTime);
         if (((Vector2)transform.position - (Vector2)dest).sqrMagnitude < 0.0001f) OnArrive();
     }
 
@@ -303,6 +312,14 @@ public class Enemy : MonoBehaviour
         transform.position = grid.CellToWorld(currentCell);
         targetCell = null;
         PickNext();
+    }
+
+    // 더 강한 슬로우가 겹치면 그쪽을 우선하고(Min), 타이머는 항상 더 긴 쪽으로 갱신한다(Max) —
+    // 여러 함정에 연달아 밟혀도 효과가 서로 깎아먹지 않도록.
+    public void ApplySlow(float multiplier, float duration)
+    {
+        slowMultiplier = Mathf.Min(slowMultiplier, multiplier);
+        slowRemaining = Mathf.Max(slowRemaining, duration);
     }
 
     public void TakeDamage(int dmg)
