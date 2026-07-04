@@ -108,7 +108,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplosiveTrap
   explosionDamage: 5
-  explosionRadius: 1.5
+  explosionRadius: 3
   explosionSfx: {fileID: 0}
 --- !u!58 &-1802817321265200398
 CircleCollider2D:
