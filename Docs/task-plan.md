@@ -29,6 +29,8 @@
 | 23 | 밸런싱 | 웨이브 4-5, 보스, 난이도 곡선 | 선택 | 스트레치 |
 | 24 | 폴리시 | 벽/함정 HP 게이지, 파괴 이펙트, SFX | 선택 | 스트레치 |
 | 25 | 제출물 | 시연 영상 3분, PDF 리포트, ZIP 빌드 | 필수 | 마지막 날 |
+| 26 | 플레이어 | 로그라이크 플레이어 — WASD 자유 이동, 사거리 내 최근접 적 자동 타겟팅 + 화살 투사체 발사, 건설 범위를 플레이어 주변으로 제한 + 원형 인디케이터, 카메라 추적 (완료 — 씬/프리팹 배선까지) | 확장(선택) | 신규 (Player.cs, Projectile.cs, CameraFollow.cs) + 재사용 (BuildManager.CanPlace, Enemy.FindWallInRange 패턴) |
+| 27 | 플레이어 | 골드로 플레이어 강화 (예: 투사체 3갈래 발사) | 확장(선택) | 미착수 — projectileCount/spreadAngle 필드만 훅으로 마련됨 |
 
 ## 2. 시스템 단위 그룹
 
@@ -43,8 +45,11 @@
 - 성 `Castle` — 적 도달 시 HP 감소 (20)
 
 **플레이어 조작**
-- 배치 `BuildManager` — 클릭→셀 변환→유효성 검사→생성, 미리보기 (12·13·14)
+- 배치 `BuildManager` — 클릭→셀 변환→유효성 검사→생성, 미리보기 (12·13·14), + 플레이어 반경 게이트 (26)
 - 재화 `Economy` — 처치·클리어 보상, 배치 비용 차감. 배치의 게이트 역할 (17)
+- 플레이어 캐릭터 `Player` — WASD 자유 이동(그리드 무시), 매 프레임 사거리 내 최근접 `Enemy` 재탐색 후 `Projectile` 발사, 건설 범위 원형 인디케이터(LineRenderer) 소유. SPUM 리그 프리팹일 때 Idle/Move 애니메이션·좌우 반전도 Enemy.cs와 동일 패턴으로 처리 (26)
+- 투사체 `Projectile` — 물리 콜라이더 없이 타겟 참조 + MoveTowards로 호밍, 매 프레임 이동 방향으로 회전(화살 비주얼이 날아가는 쪽을 보게), 타겟 소멸 시 자동 파괴 + 최대 수명 안전장치 (26)
+- 카메라 `CameraFollow` — Main Camera에 부착, `Player` 위치를 SmoothDamp로 부드럽게 추적 (26)
 
 **진행 & 표시**
 - 웨이브 `WaveManager` — SO 웨이브 구성, 스폰, 준비 시간 (15·16)
@@ -115,6 +120,14 @@
 
 ### Phase 7 — 제출
 25. #25 시연 영상, PDF 리포트, ZIP 빌드 (마지막 날)
+
+### Phase 8 — 로그라이크 플레이어 확장 (완료 — 씬/프리팹 배선까지 끝난 상태)
+26. #26 `Player.cs` — WASD 이동(자유 이동, 벽 무시), 매 프레임 `Enemy.All` 최근접 재탐색 자동 공격(`Enemy.FindWallInRange()`와 동일 패턴), 건설 범위 원형 인디케이터(LineRenderer, 건설 모드일 때만 표시)
+    - `Projectile.cs` — 타겟 참조 + MoveTowards 호밍, 매 프레임 이동 방향으로 회전(화살이 날아가는 쪽을 보도록), 타겟이 비행 중 사라지면 안전하게 자폭, 최대 수명(3초) 안전장치
+    - `CameraFollow.cs` — Main Camera에 부착, `Player`를 SmoothDamp로 추적
+    - `BuildManager.CanPlace()`에 플레이어 반경 체크 한 줄 추가 + `IsBuildMode` getter 추가 — 기존 미리보기 흰/빨강 틴트가 그대로 반영되어 별도 UI 불필요
+    - 씬 배선: 기존 SPUM 리그 `Player.prefab`(이미 씬에 배치돼 있던 것) 루트에 `Player` 컴포넌트 직접 부착, `Projectile.prefab` 신규 생성("PF Village Props - Arrow" 비주얼 자식으로 유저가 교체) 후 `Player.projectilePrefab`에 연결, Main Camera에 `CameraFollow` 부착 — 전부 프리팹/씬 파일 직접 편집으로 완료
+    - 남은 것: #27 업그레이드 시스템(골드로 `projectileCount`/`spreadAngle` 등 구매) 미착수. 현재 `Projectile`은 타겟을 계속 추적하는 호밍 방식이라 `projectileCount > 1`을 켜도 여러 발이 같은 지점에 수렴함 — 실제 "부채꼴 발사"를 구현하려면 그때 가서 고정 방향 직선 이동으로 바꿔야 함
 
 ## 4. 순서를 이렇게 잡은 이유
 - Phase 0~1을 가장 먼저 두는 이유: `Pathfinder`가 없으면 벽/적/함정 어떤 것도 의미 있는 테스트가 안 됨. 마일스톤 B(자동 우회)가 확인되기 전까지는 이후 작업(벽 반응, 배치 UI 등)을 만들어도 검증할 방법이 없음.

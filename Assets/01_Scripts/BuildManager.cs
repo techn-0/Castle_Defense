@@ -112,6 +112,8 @@ public class BuildManager : MonoBehaviour
         previewRoot.gameObject.SetActive(mode != BuildMode.None);
     }
 
+    public bool IsBuildMode => mode != BuildMode.None;
+
     // 벽/함정 공용 유효성 검사.
     bool CanPlace(Vector3Int cell)
     {
@@ -121,6 +123,11 @@ public class BuildManager : MonoBehaviour
         if (Spike.ByCell.ContainsKey(cell)) return false;
         if (FireTrap.ByCell.ContainsKey(cell)) return false;
         if (ExplosiveTrap.ByCell.ContainsKey(cell)) return false;
+        if (Player.I != null)
+        {
+            float sqr = ((Vector2)grid.CellToWorld(cell) - (Vector2)Player.I.transform.position).sqrMagnitude;
+            if (sqr > Player.I.buildRange * Player.I.buildRange) return false;
+        }
         if (Economy.I.gold < CostFor(mode)) return false;
         return true;
     }
