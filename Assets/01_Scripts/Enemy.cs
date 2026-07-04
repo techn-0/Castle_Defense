@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,8 +31,8 @@ public class Enemy : MonoBehaviour
     public AudioClip deathSfx;
     SpriteRenderer sr;
     Color baseColor;
-    Coroutine flashRoutine;
     HealthBar healthBar;
+    HitFlash hitFlash;
 
     SPUM_Prefabs spum;
     Transform spumVisual;
@@ -96,18 +95,21 @@ public class Enemy : MonoBehaviour
             spumVisual = transform.Find("UnitRoot");
         }
 
-        sr = GetComponent<SpriteRenderer>();
-        if (sr != null)
+        baseColor = kind switch
         {
-            baseColor = kind switch
-            {
-                EnemyKind.Ranged => new Color(0.4f, 0.7f, 1f),
-                EnemyKind.Ninja => new Color(0.25f, 0.25f, 0.3f),
-                EnemyKind.Boss => new Color(0.6f, 0.1f, 0.75f),
-                _ => new Color(1f, 0.6f, 0.6f),
-            };
-            sr.color = baseColor;
-        }
+            EnemyKind.Ranged => new Color(0.4f, 0.7f, 1f),
+            EnemyKind.Ninja => new Color(0.25f, 0.25f, 0.3f),
+            EnemyKind.Boss => new Color(0.6f, 0.1f, 0.75f),
+            _ => new Color(1f, 0.6f, 0.6f),
+        };
+        sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.color = baseColor;
+
+        // HitFlash는 UnitRoot(SPUM 스프라이트 전부) 하위에 붙여서, HealthBar가 루트에 직접
+        // 만들어 붙이는 체력바 스프라이트(HPBar_BG/Fill)는 점멸/펀치 대상에서 자연히 제외한다.
+        var flashHost = spumVisual != null ? spumVisual.gameObject : gameObject;
+        hitFlash = flashHost.GetComponent<HitFlash>();
+        if (hitFlash == null) hitFlash = flashHost.AddComponent<HitFlash>();
 
         PickNext();
     }
@@ -424,20 +426,8 @@ public class Enemy : MonoBehaviour
             return;
         }
         if (hitSfx != null) AudioSource.PlayClipAtPoint(hitSfx, transform.position);
-        if (sr != null)
-        {
-            if (flashRoutine != null) StopCoroutine(flashRoutine);
-            flashRoutine = StartCoroutine(FlashRoutine());
-        }
+        if (hitFlash != null) hitFlash.Flash();
         healthBar.SetFraction((float)hp / maxHp);
-    }
-
-    IEnumerator FlashRoutine()
-    {
-        sr.color = Color.white;
-        yield return new WaitForSeconds(0.08f);
-        sr.color = baseColor;
-        flashRoutine = null;
     }
 
     Wall FindWallInRange()

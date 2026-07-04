@@ -997,6 +997,7 @@ GameObject:
   - component: {fileID: 1067740569862655347}
   - component: {fileID: 6759947249339469151}
   - component: {fileID: 2600155144835129079}
+  - component: {fileID: 166045917799547625}
   m_Layer: 0
   m_Name: UnitRoot
   m_TagString: Untagged
@@ -1056,6 +1057,25 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &166045917799547625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1498979294912593936}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4e1ee8ed6d547a0a7fdb7fd8908c26a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  hitFlashMaterial: {fileID: 0}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  flashDuration: 0.08
+  targets: []
+  enableScalePunch: 1
+  punchScale: 0.8
+  punchDuration: 0.12
 --- !u!1 &1603022530488750419
 GameObject:
   m_ObjectHideFlags: 0
