@@ -10,17 +10,25 @@ public class ExplosiveTrap : MonoBehaviour
     public AudioClip explosionSfx;
 
     Vector3Int cell;
+    LineRenderer explosionIndicator;
 
     void Awake()
     {
         var grid = FindFirstObjectByType<TileGrid>();
         cell = grid.WorldToCell(transform.position);
         ByCell[cell] = this;
+
+        explosionIndicator = RangeIndicatorUtil.CreateCircle(transform, explosionRadius, BuildManager.ExplosionRangeColor, "ExplosionIndicator");
     }
 
     void OnDestroy()
     {
         if (ByCell.TryGetValue(cell, out var s) && s == this) ByCell.Remove(cell);
+    }
+
+    void Update()
+    {
+        explosionIndicator.gameObject.SetActive(BuildManager.I != null && BuildManager.I.IsBuildMode);
     }
 
     void OnTriggerEnter2D(Collider2D other)

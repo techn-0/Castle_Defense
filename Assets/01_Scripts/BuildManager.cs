@@ -20,6 +20,7 @@ public class BuildManager : MonoBehaviour
     public float costMultiplier = 1f; // 강화: 건설 비용 할인
 
     public static readonly Color LureRangeColor = new Color(1f, 0.55f, 0.1f, 0.5f);
+    public static readonly Color ExplosionRangeColor = new Color(1f, 0.2f, 0.1f, 0.5f);
 
     BuildMode mode = BuildMode.None;
     TileGrid grid;
@@ -152,6 +153,11 @@ public class BuildManager : MonoBehaviour
             var fireTrap = prefab.GetComponent<FireTrap>();
             if (fireTrap != null)
                 RangeIndicatorUtil.CreateCircle(previewRoot, fireTrap.lureRadius, LureRangeColor, "LurePreview", startActive: true);
+
+            // 폭탄(ExplosiveTrap)은 미리보기에 폭발 범위 원을 함께 그린다.
+            var explosiveTrap = prefab.GetComponent<ExplosiveTrap>();
+            if (explosiveTrap != null)
+                RangeIndicatorUtil.CreateCircle(previewRoot, explosiveTrap.explosionRadius, ExplosionRangeColor, "ExplosionPreview", startActive: true);
         }
 
         previewRoot.gameObject.SetActive(mode != BuildMode.None);
