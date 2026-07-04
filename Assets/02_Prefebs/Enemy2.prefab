@@ -6038,6 +6038,9 @@ MonoBehaviour:
   wallDamage: 1
   attackInterval: 0.6
   rangedScanRadius: 2.5
+  projectilePrefab: {fileID: 320763671289049953, guid: b3a9494bf08058093ecf07ea1b79e42a,
+    type: 3}
+  projectileSpeed: 8
   hitSfx: {fileID: 0}
   deathSfx: {fileID: 0}
   burnEffectPrefab: {fileID: 2091446406734768691, guid: f8446a3b109aa8641aa59658a9c9b733,

@@ -23,6 +23,11 @@ public class Enemy : MonoBehaviour
     public float attackInterval = 0.6f;
     public float rangedScanRadius = 2.5f;
 
+    // 원거리 전용 공격 이펙트 — 데미지는 TakeDamage 호출 시점에 이미 즉시 적용되므로
+    // 이 투사체는 순수 시각효과(EnemyProjectile)로, 목표까지 날아가면 스스로 파괴된다.
+    public GameObject projectilePrefab;
+    public float projectileSpeed = 8f;
+
     public AudioClip hitSfx;
     public AudioClip deathSfx;
     SpriteRenderer sr;
@@ -179,7 +184,16 @@ public class Enemy : MonoBehaviour
                     int thorn = lockedWall.thornDamage;
                     lockedWall.TakeDamage(wallDamage);
                     attackTimer = attackInterval;
-                    if (spum != null) spum.PlayAnimation(PlayerState.ATTACK, 0);
+                    SpawnProjectile(lockedWall.transform.position);
+                    if (spum != null)
+                    {
+                        spum.PlayAnimation(PlayerState.ATTACK, 0);
+                        // PlayAnimation(ATTACK)이 "1_Move" 애니메이터 bool을 false로 꺼버린다.
+                        // 이동 중엔 계속 걷고 있으므로, spumMoving 캐시를 무효화해서 아래 이동 로직의
+                        // SetSpumMoving(true) 호출이 다시 걸리도록(=Move bool을 true로 복원) 만든다.
+                        // 그렇지 않으면 공격 애니메이션이 끝난 뒤에도 Idle 자세로 그냥 걸어가 버린다.
+                        spumMoving = false;
+                    }
                     if (UpgradeManager.I != null && UpgradeManager.I.WallThornUnlocked)
                         TakeDamage(thorn);
                     if (hp <= 0) return;
@@ -437,6 +451,26 @@ public class Enemy : MonoBehaviour
             if (d < bestSqr) { bestSqr = d; nearest = w; }
         }
         return nearest;
+    }
+
+    void SpawnProjectile(Vector3 target)
+    {
+        if (projectilePrefab == null) return;
+        var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+
+        // Player의 Projectile.prefab을 그대로 재사용해서 연결한 경우, 물리 충돌 판정용
+        // Projectile 컴포넌트/Collider2D가 함께 따라온다. 이 발사체는 스폰 위치가 곧 이 적
+        // 자신의 위치라 스폰되자마자 자기 자신의 콜라이더와 겹쳐 즉시 트리거가 발동 →
+        // TakeDamage(0) 호출 후 그대로 파괴돼 화살이 보이지도 않고 사라지는 버그가 있었다.
+        // 이 발사체는 순수 시각효과이므로 그 판정 부품들을 걷어내고 EnemyProjectile만 남긴다.
+        var hitDetector = go.GetComponent<Projectile>();
+        if (hitDetector != null) Destroy(hitDetector);
+        var col = go.GetComponent<Collider2D>();
+        if (col != null) Destroy(col);
+
+        var proj = go.GetComponent<EnemyProjectile>();
+        if (proj == null) proj = go.AddComponent<EnemyProjectile>();
+        proj.Init(target, projectileSpeed);
     }
 
     bool InRangedScanRadius(Wall w)
