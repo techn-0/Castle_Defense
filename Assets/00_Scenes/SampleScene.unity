@@ -310,6 +310,7 @@ GameObject:
   m_Component:
   - component: {fileID: 144028662}
   - component: {fileID: 144028663}
+  - component: {fileID: 144028664}
   m_Layer: 5
   m_Name: HUD
   m_TagString: Untagged
@@ -360,6 +361,24 @@ MonoBehaviour:
   goldText: {fileID: 177538046}
   waveText: {fileID: 1760155538}
   castleHpText: {fileID: 1333981827}
+--- !u!114 &144028664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 144028661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bdbf61ac001d374e866b1cbea7d9c1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildPanelUI
+  buildManager: {fileID: 2085578405}
+  wallButtonLabel: {fileID: 695344220}
+  spikeButtonLabel: {fileID: 2087896499}
+  fireTrapButtonLabel: {fileID: 900010008}
+  explosiveTrapButtonLabel: {fileID: 900010108}
+  demolishButtonLabel: {fileID: 694417665}
 --- !u!1 &177538044
 GameObject:
   m_ObjectHideFlags: 0

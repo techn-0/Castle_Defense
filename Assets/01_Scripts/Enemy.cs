@@ -35,6 +35,7 @@ public class Enemy : MonoBehaviour
     bool spumMoving;
     float facing = 1f; // +1 = 오른쪽, -1 = 왼쪽. 순수 상하 이동일 땐 마지막 방향을 유지한다.
 
+    public Vector3Int CurrentCell => currentCell;
     public Transform LuredBy => luredBy;
     Transform luredBy;
     float lureDwellDuration;
@@ -146,6 +147,16 @@ public class Enemy : MonoBehaviour
         // Pathfinder.Recompute()가 Start()에서 도는데, 오브젝트 간 Start() 순서는 보장되지 않는다.
         // 이 Enemy의 Start()가 먼저 돌면 첫 PickNext()가 빈 거리값을 보고 실패할 수 있으니 매 프레임 재시도한다.
         if (targetCell == null) { PickNext(); if (targetCell == null) return; }
+
+        // 이동 중(아직 도착 전)에 목표 칸에 새 벽이 놓이면, 그 칸을 향해 계속 걸어가
+        // 벽을 뚫고 지나가 버린다. 닌자는 원래 벽을 무시하므로 예외로 둔다.
+        if (kind != EnemyKind.Ninja && grid.IsOccupied(targetCell.Value))
+        {
+            targetCell = null;
+            PickNext();
+            if (targetCell == null) return;
+        }
+
         SetSpumMoving(true);
         Vector3 dest = grid.CellToWorld(targetCell.Value);
         FaceTowards(dest);

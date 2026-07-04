@@ -146,6 +146,8 @@ public class BuildManager : MonoBehaviour
         if (Spike.ByCell.ContainsKey(cell)) return false;
         if (FireTrap.ByCell.ContainsKey(cell)) return false;
         if (ExplosiveTrap.ByCell.ContainsKey(cell)) return false;
+        foreach (var e in Enemy.All)
+            if (e.CurrentCell == cell) return false;
         if (Player.I != null)
         {
             float sqr = ((Vector2)grid.CellToWorld(cell) - (Vector2)Player.I.transform.position).sqrMagnitude;
