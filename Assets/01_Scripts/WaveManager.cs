@@ -109,7 +109,6 @@ public class WaveManager : MonoBehaviour
         var go = Instantiate(entry.enemyPrefab, grid.CellToWorld(cell), Quaternion.identity);
 
         var enemy = go.GetComponent<Enemy>();
-        enemy.kind = entry.kind;
         if (entry.hpOverride > 0) enemy.maxHp = entry.hpOverride;
         if (entry.speedOverride > 0) enemy.speed = entry.speedOverride;
         if (entry.goldOverride > 0) enemy.goldReward = entry.goldOverride;

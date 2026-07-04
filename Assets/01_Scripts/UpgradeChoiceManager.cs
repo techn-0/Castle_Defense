@@ -69,7 +69,7 @@ public class UpgradeChoiceManager : MonoBehaviour
         {
             id = "multi_shot",
             title = "다중 발사",
-            description = "화살을 부채꼴로 한 발 더 발사합니다.",
+            description = "화살을 한 발 더 발사합니다.",
             maxStacks = 2, // 1 -> 2 -> 3발
             apply = () => Player.I.projectileCount += 1,
         });
@@ -78,7 +78,7 @@ public class UpgradeChoiceManager : MonoBehaviour
         {
             id = "pierce",
             title = "관통 사격",
-            description = "화살이 첫 번째 적을 관통해 뒤의 적도 맞힙니다.",
+            description = "화살이 한번 관통합니다,",
             maxStacks = 1,
             apply = () => Player.I.projectilePierce += 1,
         });

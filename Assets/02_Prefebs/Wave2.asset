@@ -15,18 +15,16 @@ MonoBehaviour:
   entries:
   - enemyPrefab: {fileID: 4668328802031923636, guid: a01c6fcb48f169d4695db2e5823a1954,
       type: 3}
-    kind: 0
-    count: 15
+    count: 20
     hpOverride: 0
     speedOverride: 0
     goldOverride: 0
     sizeMultiplier: 1
   - enemyPrefab: {fileID: 4711577484832226095, guid: fe87028166426c24abe9702f962ba6d1,
       type: 3}
-    kind: 1
-    count: 15
+    count: 20
     hpOverride: 0
     speedOverride: 0
     goldOverride: 0
     sizeMultiplier: 1
-  spawnInterval: 0.5
+  spawnInterval: 0.6

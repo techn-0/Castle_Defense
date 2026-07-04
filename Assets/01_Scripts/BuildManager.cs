@@ -106,7 +106,7 @@ public class BuildManager : MonoBehaviour
         _ => null,
     };
 
-    int CostFor(BuildMode m)
+    public int CostFor(BuildMode m)
     {
         int baseCost = m switch
         {

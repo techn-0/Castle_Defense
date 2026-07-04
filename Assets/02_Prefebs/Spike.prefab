@@ -47,7 +47,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Spike
   damage: 1
-  durability: 5
+  durability: 10
+  slowMultiplier: 0.5
+  slowDuration: 3
+  hitSfx: {fileID: 0}
+  destroySfx: {fileID: 0}
 --- !u!61 &8151444695647240008
 BoxCollider2D:
   m_ObjectHideFlags: 0

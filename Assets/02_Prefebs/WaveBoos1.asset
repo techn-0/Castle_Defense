@@ -10,39 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0bf550636a0e77a449b5e745d6e7347c, type: 3}
-  m_Name: Wave5.
+  m_Name: WaveBoos1
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   entries:
   - enemyPrefab: {fileID: 4668328802031923636, guid: a01c6fcb48f169d4695db2e5823a1954,
       type: 3}
-    kind: 0
-    count: 20
-    hpOverride: 0
-    speedOverride: 0
-    goldOverride: 0
-    sizeMultiplier: 1
-  - enemyPrefab: {fileID: 4711577484832226095, guid: fe87028166426c24abe9702f962ba6d1,
-      type: 3}
-    kind: 1
-    count: 10
-    hpOverride: 0
-    speedOverride: 0
-    goldOverride: 0
-    sizeMultiplier: 1
-  - enemyPrefab: {fileID: 6698776138348635874, guid: 5b0c1710b1b183743986af88c84a19b0,
-      type: 3}
-    kind: 2
-    count: 10
+    count: 50
     hpOverride: 0
     speedOverride: 0
     goldOverride: 0
     sizeMultiplier: 1
   - enemyPrefab: {fileID: 4668328802031923636, guid: a01c6fcb48f169d4695db2e5823a1954,
       type: 3}
-    kind: 3
-    count: 1
-    hpOverride: 40
-    speedOverride: 1.2
+    count: 5
+    hpOverride: 50
+    speedOverride: 0.7
     goldOverride: 100
-    sizeMultiplier: 1.8
-  spawnInterval: 0.5
+    sizeMultiplier: 2
+  spawnInterval: 0.6

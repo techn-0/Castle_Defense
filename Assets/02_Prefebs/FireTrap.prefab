@@ -52,7 +52,7 @@ MonoBehaviour:
   tickDamage: 1
   tickInterval: 1
   dwellDuration: 0.5
-  durability: 10
+  durability: 20
   burnLingerDuration: 5
   hitSfx: {fileID: 0}
   destroySfx: {fileID: 0}
