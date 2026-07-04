@@ -9,8 +9,13 @@ public class FireTrap : MonoBehaviour
     public int tickDamage = 1;
     public float tickInterval = 0.5f;
     public float dwellDuration = 3f;
+    public int durability = 8;
+    public AudioClip hitSfx;
+    public AudioClip destroySfx;
 
     Vector3Int cell;
+    int maxDurability;
+    HealthBar healthBar;
     readonly Dictionary<Enemy, float> tickTimers = new();
 
     void Awake()
@@ -18,11 +23,22 @@ public class FireTrap : MonoBehaviour
         var grid = FindFirstObjectByType<TileGrid>();
         cell = grid.WorldToCell(transform.position);
         ByCell[cell] = this;
+
+        maxDurability = durability;
+        healthBar = GetComponent<HealthBar>();
+        if (healthBar == null) healthBar = gameObject.AddComponent<HealthBar>();
     }
 
     void OnDestroy()
     {
         if (ByCell.TryGetValue(cell, out var s) && s == this) ByCell.Remove(cell);
+        // 소진되어 파괴될 때 이 함정에 유인되어 오던/체류 중이던 적을 정상적으로 풀어준다 —
+        // 그냥 파괴에 맡기면 luredBy가 Unity의 fake-null이 되어 Update()의 셀 스냅 로직을
+        // 건너뛰고 어중간한 위치에서 경로찾기가 재개된다.
+        foreach (var e in new List<Enemy>(Enemy.All))
+        {
+            if (e.LuredBy == transform) e.ReleaseLure();
+        }
     }
 
     void Update()
@@ -40,13 +56,35 @@ public class FireTrap : MonoBehaviour
     // 여기서는 접촉 데미지 틱만 담당한다.
     void OnTriggerStay2D(Collider2D other)
     {
+        if (durability <= 0) return;
         var enemy = other.GetComponent<Enemy>();
         if (enemy == null) return;
 
         if (!tickTimers.TryGetValue(enemy, out var tt)) tt = tickInterval;
         tt -= Time.deltaTime;
-        if (tt <= 0f) { enemy.TakeDamage(tickDamage); tt = tickInterval; }
+        if (tt <= 0f)
+        {
+            enemy.TakeDamage(tickDamage);
+            tt = tickInterval;
+            ConsumeDurability();
+        }
         tickTimers[enemy] = tt;
+    }
+
+    // 스파이크(밟은 횟수 소모)와 달리 화염 함정은 틱마다 소모된다 — 지속딜인 만큼
+    // 무한히 눌러앉아 딜을 넣지 못하도록 내구도가 다하면 스스로 파괴된다.
+    void ConsumeDurability()
+    {
+        durability--;
+        if (durability <= 0)
+        {
+            if (destroySfx != null) AudioSource.PlayClipAtPoint(destroySfx, transform.position);
+            EffectsUtil.SpawnBurst(transform.position, new Color(1f, 0.5f, 0.1f));
+            Destroy(gameObject);
+            return;
+        }
+        if (hitSfx != null) AudioSource.PlayClipAtPoint(hitSfx, transform.position);
+        healthBar.SetFraction((float)durability / maxDurability);
     }
 
     void OnTriggerExit2D(Collider2D other)
