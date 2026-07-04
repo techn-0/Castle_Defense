@@ -10,8 +10,7 @@ public class FireTrap : MonoBehaviour
     public float tickInterval = 0.5f;
     public float dwellDuration = 3f;
     public int durability = 8;
-    public float spreadRadius = 1.5f;
-    public int spreadDamage = 1;
+    public float burnLingerDuration = 5f;
     public AudioClip hitSfx;
     public AudioClip destroySfx;
 
@@ -67,25 +66,13 @@ public class FireTrap : MonoBehaviour
         if (tt <= 0f)
         {
             enemy.TakeDamage(tickDamage);
+            // 강화 후에는 접촉이 끝나도(트랩을 벗어나도) 같은 틱뎀/주기로 일정 시간 계속 불타게 한다.
             if (UpgradeManager.I != null && UpgradeManager.I.FireSpreadUnlocked)
-                SpreadBurn(enemy);
+                enemy.ApplyBurn(tickDamage, tickInterval, burnLingerDuration);
             tt = tickInterval;
             ConsumeDurability();
         }
         tickTimers[enemy] = tt;
-    }
-
-    // 강화 후 트랩에 붙잡힌 적 주변으로 화상이 옮아붙는다 — 적이 몰릴수록 가치가 커지는
-    // 물량전용 카운터. ExplosiveTrap.Explode()와 동일하게 스냅샷을 떠서 순회한다(TakeDamage로
-    // 죽은 적이 Enemy.All을 변형시켜 반복 중 예외가 나는 것을 방지).
-    void SpreadBurn(Enemy source)
-    {
-        foreach (var e in new List<Enemy>(Enemy.All))
-        {
-            if (e == source) continue;
-            float sqr = ((Vector2)e.transform.position - (Vector2)source.transform.position).sqrMagnitude;
-            if (sqr < spreadRadius * spreadRadius) e.TakeDamage(spreadDamage);
-        }
     }
 
     // 스파이크(밟은 횟수 소모)와 달리 화염 함정은 틱마다 소모된다 — 지속딜인 만큼

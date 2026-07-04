@@ -52,6 +52,15 @@ public class Enemy : MonoBehaviour
     float slowMultiplier = 1f;
     float slowRemaining = 0f;
 
+    public GameObject burnEffectPrefab;
+    public Vector3 burnEffectOffset = Vector3.zero;
+    GameObject burnEffectInstance;
+
+    int burnDamage;
+    float burnTickInterval;
+    float burnTickTimer;
+    float burnRemaining = 0f;
+
     // grid는 Awake에서 바로 채워둔다 — Start까지 미루면, 같은 프레임에 다른 오브젝트의
     // Update(예: FireTrap.Update가 Enemy.All을 순회)가 이 적의 Start보다 먼저 실행될 때
     // grid가 아직 null이라 NullReferenceException이 난다.
@@ -106,8 +115,26 @@ public class Enemy : MonoBehaviour
             if (slowRemaining <= 0f) slowMultiplier = 1f;
         }
 
+        if (burnRemaining > 0f)
+        {
+            burnRemaining -= Time.deltaTime;
+            burnTickTimer -= Time.deltaTime;
+            if (burnTickTimer <= 0f)
+            {
+                TakeDamage(burnDamage);
+                if (hp <= 0) return; // 이번 프레임에 죽었으면 이후 이동/공격 로직을 더 돌릴 필요 없음
+                burnTickTimer = burnTickInterval;
+            }
+            if (burnRemaining <= 0f) ClearBurnEffect();
+        }
+
         if (luredBy != null)
         {
+            // 이동 중 목표 칸에 새 벽이 세워지면 무효화 — 일반 이동(#30 버그 수정)과 동일한 이유로,
+            // 유인 이동도 매 프레임 재검사해야 한다(닌자는 원래 벽을 무시하므로 예외).
+            if (targetCell != null && kind != EnemyKind.Ninja && grid.IsOccupied(targetCell.Value))
+                targetCell = null;
+
             if (targetCell == null)
             {
                 PickNextLureStep();
@@ -270,9 +297,9 @@ public class Enemy : MonoBehaviour
             Wall.ByCell.TryGetValue(bestWall.Value, out lockedWall);
     }
 
-    // 유인 이동도 그리드 칸 단위로 진행한다 — 벽 점유는 무시하지만(닌자와 동일하게 HasTile만
-    // 확인) 실제 타일이 없는 칸(맵 바깥/틈)까지 가로지르지는 않는다. 매 칸 도착마다 유인 대상
-    // 쪽으로 더 가까워지는 이웃을 다시 고르는 단순 그리디 방식이라, 아주 복잡한 지형에서는
+    // 유인 이동도 그리드 칸 단위로 진행한다 — 일반 이동과 마찬가지로 벽 점유(IsOccupied)를
+    // 존중해 벽을 뚫고 지나가지 않는다(닌자는 원래 벽을 무시하는 설계라 예외). 매 칸 도착마다
+    // 유인 대상 쪽으로 더 가까워지는 이웃을 다시 고르는 단순 그리디 방식이라, 아주 복잡한 지형에서는
     // 최적 경로가 아닐 수 있지만 함정은 보통 기존 통로 근처에 놓이므로 충분하다.
     void PickNextLureStep()
     {
@@ -282,6 +309,7 @@ public class Enemy : MonoBehaviour
         foreach (var nb in grid.GetNeighbors4(currentCell))
         {
             if (!grid.HasTile(nb)) continue;
+            if (kind != EnemyKind.Ninja && grid.IsOccupied(nb)) continue;
             float d = ((Vector2)grid.CellToWorld(nb) - (Vector2)destWorld).sqrMagnitude;
             if (d < bestSqr) { best = nb; bestSqr = d; }
         }
@@ -323,6 +351,28 @@ public class Enemy : MonoBehaviour
     {
         slowMultiplier = Mathf.Min(slowMultiplier, multiplier);
         slowRemaining = Mathf.Max(slowRemaining, duration);
+    }
+
+    // 화염 함정 접촉이 끝나도(트랩을 벗어나도) 남은 시간 동안 독자적으로 도트 데미지를 계속 준다.
+    // 재적용 시 데미지/주기는 최신 값으로 덮어쓰고, 남은 시간은 더 긴 쪽으로 갱신한다(ApplySlow와 동일 관례).
+    public void ApplyBurn(int tickDamage, float tickInterval, float duration)
+    {
+        burnDamage = tickDamage;
+        burnTickInterval = tickInterval;
+        if (burnRemaining <= 0f) burnTickTimer = tickInterval;
+        burnRemaining = Mathf.Max(burnRemaining, duration);
+
+        // 이미 불이 붙어 있으면 이펙트를 새로 만들지 않고 지속 시간만 갱신한다.
+        if (burnEffectInstance == null && burnEffectPrefab != null)
+            burnEffectInstance = Instantiate(burnEffectPrefab, transform.position + burnEffectOffset, Quaternion.identity, transform);
+    }
+
+    // 이 적의 자식으로 붙여뒀으므로(Instantiate의 parent 인자) 적이 죽어 Destroy될 때는
+    // 유니티가 자동으로 함께 파괴해준다 — 여기서는 지속 시간이 다 됐을 때만 직접 정리한다.
+    void ClearBurnEffect()
+    {
+        if (burnEffectInstance != null) Destroy(burnEffectInstance);
+        burnEffectInstance = null;
     }
 
     public void TakeDamage(int dmg)

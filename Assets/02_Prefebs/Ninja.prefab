@@ -6475,13 +6475,16 @@ MonoBehaviour:
   kind: 2
   speed: 2
   damage: 5
-  maxHp: 10
+  maxHp: 8
   goldReward: 2
   wallDamage: 1
   attackInterval: 0.6
   rangedScanRadius: 2.5
   hitSfx: {fileID: 0}
   deathSfx: {fileID: 0}
+  burnEffectPrefab: {fileID: 2091446406734768691, guid: f8446a3b109aa8641aa59658a9c9b733,
+    type: 3}
+  burnEffectOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &6787443856055725381
 GameObject:
   m_ObjectHideFlags: 0

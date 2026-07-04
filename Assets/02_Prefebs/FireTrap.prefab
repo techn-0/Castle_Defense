@@ -50,11 +50,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FireTrap
   lureRadius: 3
   tickDamage: 1
-  tickInterval: 0.5
-  dwellDuration: 1
-  durability: 8
-  spreadRadius: 1.5
-  spreadDamage: 1
+  tickInterval: 1
+  dwellDuration: 0.5
+  durability: 10
+  burnLingerDuration: 5
   hitSfx: {fileID: 0}
   destroySfx: {fileID: 0}
 --- !u!58 &2292348237843732295
