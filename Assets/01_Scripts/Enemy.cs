@@ -6,7 +6,7 @@ public enum EnemyKind { Melee, Ranged, Ninja, Boss }
 
 // 근접/원거리/닌자 공통 스크립트. kind 하나로 벽 반응만 분기한다.
 //   근접: 열린 이웃 셀이 있으면 그리로. 모두 막혔을 때만 앞의 벽 공격.
-//   원거리: 이동 중에도 사거리 내 벽이 감지되면 멈춰서 그 벽을 공격.
+//   원거리: 이동 중에도 사거리 내 벽이 감지되면 멈추지 않고 계속 이동하면서 그 벽을 공격.
 //   닌자: 벽 점유를 아예 무시하고 최단 경로로 그대로 통과.
 public class Enemy : MonoBehaviour
 {
@@ -162,11 +162,34 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        if (kind == EnemyKind.Ranged && lockedWall == null)
-            lockedWall = FindWallInRange();
-
-        if (lockedWall != null)
+        if (kind == EnemyKind.Ranged)
         {
+            // 원거리는 잠긴 벽이 죽었거나 사거리를 벗어나면 즉시 풀어준다 — 이동을 멈추지 않으므로
+            // 계속 멀어질 수 있고, 그 경우 더는 공격 대상이 아니다.
+            if (lockedWall != null && (lockedWall.hp <= 0 || !InRangedScanRadius(lockedWall)))
+                lockedWall = null;
+            if (lockedWall == null)
+                lockedWall = FindWallInRange();
+
+            if (lockedWall != null)
+            {
+                attackTimer -= Time.deltaTime;
+                if (attackTimer <= 0f)
+                {
+                    int thorn = lockedWall.thornDamage;
+                    lockedWall.TakeDamage(wallDamage);
+                    attackTimer = attackInterval;
+                    if (spum != null) spum.PlayAnimation(PlayerState.ATTACK, 0);
+                    if (UpgradeManager.I != null && UpgradeManager.I.WallThornUnlocked)
+                        TakeDamage(thorn);
+                    if (hp <= 0) return;
+                }
+            }
+            // 정지하지 않고 아래 일반 이동 로직으로 이어서 진행한다.
+        }
+        else if (lockedWall != null)
+        {
+            // 근접/닌자/보스: 사방이 막혔을 때만 벽을 잠그고, 그 자리에 멈춰서 공격한다.
             if (lockedWall.hp <= 0) { lockedWall = null; PickNext(); return; }
             SetSpumMoving(false);
             FaceTowards(lockedWall.transform.position);
@@ -414,5 +437,11 @@ public class Enemy : MonoBehaviour
             if (d < bestSqr) { bestSqr = d; nearest = w; }
         }
         return nearest;
+    }
+
+    bool InRangedScanRadius(Wall w)
+    {
+        float d = ((Vector2)w.transform.position - (Vector2)transform.position).sqrMagnitude;
+        return d <= rangedScanRadius * rangedScanRadius;
     }
 }

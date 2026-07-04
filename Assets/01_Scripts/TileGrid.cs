@@ -9,15 +9,20 @@ using UnityEngine.Tilemaps;
 public class TileGrid : MonoBehaviour
 {
     public Tilemap tilemap;
-    public TileBase walkableTile;
+    // 걷기 가능한 타일로 취급할 타일 종류 목록 — 잔디/흙 등 여러 비주얼을 섞어 칠해도
+    // 전부 walkable로 인식시키고 싶을 때 여기에 여러 개를 등록한다.
+    public TileBase[] walkableTiles;
 
     readonly Dictionary<Vector3Int, bool> occupied = new();
+    HashSet<TileBase> walkableSet;
     Vector3Int? castleCell;
     readonly List<Vector3Int> spawnCells = new();
     BoundsInt bounds;
 
     void Awake()
     {
+        walkableSet = new HashSet<TileBase>(walkableTiles ?? System.Array.Empty<TileBase>());
+
         tilemap.CompressBounds();
         bounds = tilemap.cellBounds;
 
@@ -30,7 +35,7 @@ public class TileGrid : MonoBehaviour
 
     public bool InBounds(Vector3Int cell) => bounds.Contains(cell);
 
-    bool HasBaseTile(Vector3Int cell) => tilemap.GetTile(cell) == walkableTile;
+    bool HasBaseTile(Vector3Int cell) => walkableSet.Contains(tilemap.GetTile(cell));
 
     // 벽이 놓인 칸도 바닥 타일 자체는 있다 — Pathfinder의 벽-통과 가중치 탐색이
     // 점유 여부와 무관하게 "이 칸이 그리드에 속하는지"만 판별할 때 쓴다.
