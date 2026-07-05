@@ -94995,6 +94995,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: GameOverPanel
       objectReference: {fileID: 0}
+    - target: {fileID: 7895017514644312235, guid: 9e1f180c32471fd48af5c743fdeca922,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -95112,6 +95117,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: UpgradeChoicePanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 802758971387975126, guid: 890a140fa08ddce4b85b321e0712b138,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -95395,6 +95405,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: VictoryPanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 6987936304835653140, guid: d7f40c7ab7d658948b78862d8fcb4218,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8828895719585287732, guid: d7f40c7ab7d658948b78862d8fcb4218,
         type: 3}
