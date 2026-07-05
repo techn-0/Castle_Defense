@@ -2,7 +2,8 @@
 
 조선시대 성(城)을 배경으로 한 **타워 디펜스 + 로그라이크 성장** 게임. 함정과 벽을 배치해 방어선을 구축하는 동시에, 플레이어 캐릭터를 직접 조작해 전투에 참여할 수 있다.
 
-> 📷 *[여기에 타이틀/플레이 스크린샷 삽입]*
+> <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1bd24b56-15d1-4494-ad7d-f0524f2eba03" />
+<img width="1920" height="1080" alt="image (1)" src="https://github.com/user-attachments/assets/b3b50d25-9eb9-4527-9b61-d1bb4c3a1676" />
 
 ## 게임 소개
 
@@ -54,12 +55,9 @@ Docs/
 ## 사용한 AI 도구
 
 - **Claude Code**: 기획 구체화 및 Phase/Task 단위 개발 계획 수립, 단계별 구현 보조
-- **Google Gemini**: 캐릭터 투구 디자인, 조선시대 성 컨셉 맵 아트, 함정 스프라이트 생성 (이후 포토샵으로 보정)
+- **Google Gemini**: 캐릭터 투구 디자인, 조선시대 성 컨셉 맵 아트, 함정 스프라이트 생성 (이후 편집 및 보정)
 - **VARCO AI**: BGM 및 전투 SFX 등 게임 내 모든 사운드/음악 생성
 
-자세한 내용은 [`Docs/작업보고서.md`](Docs/작업보고서.md) 참고.
 
 ## 문서
-
-- [작업보고서](Docs/작업보고서.md) — 결과물 설명, 제작 과정, AI 활용, 트러블슈팅
 - [task-plan.md](Docs/task-plan.md) — Phase별 개발 계획 및 작업 로그
