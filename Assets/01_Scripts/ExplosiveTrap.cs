@@ -8,6 +8,7 @@ public class ExplosiveTrap : MonoBehaviour
     public int explosionDamage = 5;
     public float explosionRadius = 1.5f;
     public AudioClip explosionSfx;
+    public GameObject explosionEffectPrefab;
 
     Vector3Int cell;
     LineRenderer explosionIndicator;
@@ -48,6 +49,11 @@ public class ExplosiveTrap : MonoBehaviour
         }
         if (explosionSfx != null) AudioSource.PlayClipAtPoint(explosionSfx, transform.position);
         EffectsUtil.SpawnBurst(transform.position, new Color(1f, 0.5f, 0.1f), 16, 3f);
+        if (explosionEffectPrefab != null)
+        {
+            var effect = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            Destroy(effect, 1f);
+        }
         Destroy(gameObject);
     }
 }
