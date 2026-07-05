@@ -45,8 +45,14 @@ public class BuildManager : MonoBehaviour
         if (I == this) I = null;
     }
 
+    // PauseManager가 LateUpdate에서 확인해, 건축 모드 취소와 일시정지 패널이 같은 Escape
+    // 입력에 동시에 반응하지 않도록 한다.
+    public bool ConsumedEscape { get; private set; }
+
     void Update()
     {
+        ConsumedEscape = false;
+
         // Time.timeScale == 0f: 웨이브 클리어 후 강화 선택 패널이 떠 있는 동안(UpgradeChoiceManager) —
         // GameManager.IsPlaying은 여전히 true이므로 별도로 막아야 한다.
         if (!GameManager.I.IsPlaying || Time.timeScale == 0f) return;
@@ -56,7 +62,11 @@ public class BuildManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha3)) SetMode(BuildMode.FireTrap);
         else if (Input.GetKeyDown(KeyCode.Alpha4)) SetMode(BuildMode.ExplosiveTrap);
         else if (Input.GetKeyDown(KeyCode.Alpha5)) SetMode(BuildMode.Demolish);
-        else if (Input.GetKeyDown(KeyCode.Escape)) SetMode(BuildMode.None);
+        else if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (mode != BuildMode.None) ConsumedEscape = true;
+            SetMode(BuildMode.None);
+        }
 
         if (mode == BuildMode.None) return;
 
