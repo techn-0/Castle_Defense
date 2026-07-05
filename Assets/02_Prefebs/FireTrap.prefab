@@ -54,7 +54,7 @@ MonoBehaviour:
   dwellDuration: 0.5
   durability: 20
   burnLingerDuration: 5
-  hitSfx: {fileID: 0}
+  hitSfx: {fileID: 8300000, guid: 2a4f4632b5f3d7b44bc6758eebc28213, type: 3}
   destroySfx: {fileID: 0}
 --- !u!58 &2292348237843732295
 CircleCollider2D:

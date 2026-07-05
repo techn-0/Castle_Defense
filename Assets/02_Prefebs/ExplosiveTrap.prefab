@@ -109,7 +109,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExplosiveTrap
   explosionDamage: 5
   explosionRadius: 3
-  explosionSfx: {fileID: 0}
+  explosionSfx: {fileID: 8300000, guid: dacf3815036deaf4cb5bbc59a0b5b312, type: 3}
   explosionEffectPrefab: {fileID: 2319506590570585855, guid: c1614326ecd8cc6448b44707c817cbce,
     type: 3}
 --- !u!58 &-1802817321265200398
