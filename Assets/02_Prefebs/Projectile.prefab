@@ -46,8 +46,11 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: efb012d6447a14f47bcdcb1221ecfabd, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   maxLifetime: 3
+  explosionSfx: {fileID: 8300000, guid: dacf3815036deaf4cb5bbc59a0b5b312, type: 3}
+  explosionEffectPrefab: {fileID: 2319506590570585855, guid: c1614326ecd8cc6448b44707c817cbce,
+    type: 3}
 --- !u!50 &877346068558363801
 Rigidbody2D:
   serializedVersion: 5

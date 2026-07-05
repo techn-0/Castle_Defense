@@ -8,6 +8,8 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
     public float maxLifetime = 3f;
+    public AudioClip explosionSfx;
+    public GameObject explosionEffectPrefab;
 
     Vector2 direction;
     float speed;
@@ -64,6 +66,14 @@ public class Projectile : MonoBehaviour
 
     void ApplySplash(Enemy hitEnemy)
     {
+        if (explosionSfx != null) AudioSource.PlayClipAtPoint(explosionSfx, transform.position);
+        EffectsUtil.SpawnBurst(transform.position, new Color(1f, 0.5f, 0.1f), 16, 3f);
+        if (explosionEffectPrefab != null)
+        {
+            var effect = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            Destroy(effect, 1f);
+        }
+
         foreach (var e in new List<Enemy>(Enemy.All))
         {
             if (e == hitEnemy) continue;

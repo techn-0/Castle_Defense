@@ -40,29 +40,11 @@ public class UpgradeChoiceManager : MonoBehaviour
 
         pool.Add(new UpgradeOption
         {
-            id = "atk_range",
-            title = "사거리 증가",
-            description = "공격 사거리가 1 증가합니다.",
-            maxStacks = 4,
-            apply = () => Player.I.attackRange += 1.0f,
-        });
-
-        pool.Add(new UpgradeOption
-        {
             id = "move_speed",
             title = "이동속도 증가",
             description = "이동속도가 0.5증가합니다.",
             maxStacks = 4,
             apply = () => Player.I.moveSpeed += 0.5f,
-        });
-
-        pool.Add(new UpgradeOption
-        {
-            id = "proj_speed",
-            title = "빠른 화살",
-            description = "화살이 더 빠르게 날아갑니다.",
-            maxStacks = 3,
-            apply = () => Player.I.projectileSpeed += 2f,
         });
 
         pool.Add(new UpgradeOption

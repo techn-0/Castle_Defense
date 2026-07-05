@@ -45,6 +45,10 @@ public class Enemy : MonoBehaviour
     float lureDwellDuration;
     float lureDwellRemaining = -1f; // -1 = 아직 함정에 도착 못함(체류 시작 전)
     readonly HashSet<Transform> visitedLures = new();
+    // 유인 이동 전용 BFS 거리장 — 함정 칸을 0으로 두고 실제로 걸어갈 수 있는 경로만 따라 채운다.
+    // 단순 유클리드 거리 최솟값으로 다음 칸을 고르면 벽에 막힌 통로에서 "더 가까워질 이웃이 없다"가
+    // 되어(실제로는 닿지 않았는데도) 도착 판정을 내려버리는 문제가 있어 GetLured 시점에 한 번 계산한다.
+    readonly Dictionary<Vector3Int, int> lureDist = new();
 
     int hp;
     TileGrid grid;
@@ -147,6 +151,15 @@ public class Enemy : MonoBehaviour
                 PickNextLureStep();
                 if (targetCell == null)
                 {
+                    bool actuallyAtTrap = lureDist.TryGetValue(currentCell, out var d) && d == 0;
+                    if (!actuallyAtTrap)
+                    {
+                        // 벽 등에 막혀 더는 다가갈 수 없을 뿐, 실제로 함정에 닿은 게 아니다 —
+                        // 여기서 도착 판정을 내리면 닿지 않았는데 체류만 채우고 풀려나는 버그가 된다.
+                        // 즉시 유인을 포기하고 원래 이동으로 복귀한다.
+                        ReleaseLure();
+                        return;
+                    }
                     // 더 가까워질 이웃이 없다 = 함정에 도착. 체류 타이머를 여기서 자체적으로 돌린다 —
                     // 함정 쪽 트리거(OnTriggerStay2D)가 어떤 이유로 안 불리더라도(콜라이더 설정 등)
                     // 반드시 시간이 지나면 풀리도록, 해제를 함정에 의존하지 않고 Enemy가 직접 보장한다.
@@ -337,22 +350,43 @@ public class Enemy : MonoBehaviour
     }
 
     // 유인 이동도 그리드 칸 단위로 진행한다 — 일반 이동과 마찬가지로 벽 점유(IsOccupied)를
-    // 존중해 벽을 뚫고 지나가지 않는다(닌자는 원래 벽을 무시하는 설계라 예외). 매 칸 도착마다
-    // 유인 대상 쪽으로 더 가까워지는 이웃을 다시 고르는 단순 그리디 방식이라, 아주 복잡한 지형에서는
-    // 최적 경로가 아닐 수 있지만 함정은 보통 기존 통로 근처에 놓이므로 충분하다.
+    // 존중해 벽을 뚫고 지나가지 않는다(닌자는 원래 벽을 무시하는 설계라 예외). lureDist(BFS 거리장)에서
+    // 더 작은 값을 가진 이웃으로만 이동한다 — 단순 유클리드 거리였다면 벽으로 굽은 통로에서
+    // "더 가까워질 이웃이 없다"는 잘못된 판단(실제로는 도착 전인데 도착으로 오인)이 나올 수 있었다.
     void PickNextLureStep()
     {
-        Vector3 destWorld = luredBy.position;
+        int curDist = lureDist.TryGetValue(currentCell, out var cd) ? cd : int.MaxValue;
         Vector3Int? best = null;
-        float bestSqr = ((Vector2)grid.CellToWorld(currentCell) - (Vector2)destWorld).sqrMagnitude;
+        int bestDist = curDist;
         foreach (var nb in grid.GetNeighbors4(currentCell))
         {
-            if (!grid.HasTile(nb)) continue;
             if (kind != EnemyKind.Ninja && grid.IsOccupied(nb)) continue;
-            float d = ((Vector2)grid.CellToWorld(nb) - (Vector2)destWorld).sqrMagnitude;
-            if (d < bestSqr) { best = nb; bestSqr = d; }
+            if (!lureDist.TryGetValue(nb, out var d)) continue;
+            if (d < bestDist) { best = nb; bestDist = d; }
         }
         targetCell = best;
+    }
+
+    // 함정 칸을 거리 0으로 두고 실제로 걸어서 갈 수 있는 칸만 BFS로 채운다(닌자는 벽을 무시하므로
+    // HasTile만, 나머지는 IsWalkable로 벽 점유 칸을 제외). GetLured 시점에 한 번만 계산해서 쓴다.
+    void ComputeLureDistances(Vector3 lureWorldPos)
+    {
+        lureDist.Clear();
+        var destCell = grid.WorldToCell(lureWorldPos);
+        var q = new Queue<Vector3Int>();
+        lureDist[destCell] = 0;
+        q.Enqueue(destCell);
+        while (q.Count > 0)
+        {
+            var cur = q.Dequeue();
+            foreach (var nb in grid.GetNeighbors4(cur))
+            {
+                bool passable = kind == EnemyKind.Ninja ? grid.HasTile(nb) : grid.IsWalkable(nb);
+                if (!passable || lureDist.ContainsKey(nb)) continue;
+                lureDist[nb] = lureDist[cur] + 1;
+                q.Enqueue(nb);
+            }
+        }
     }
 
     // 유인형 함정(FireTrap 등)이 유인을 걸 때 이 메서드를 통해서만 호출한다 — luredBy를
@@ -367,6 +401,7 @@ public class Enemy : MonoBehaviour
         visitedLures.Add(lureSource);
         currentCell = grid.WorldToCell(transform.position);
         targetCell = null;
+        ComputeLureDistances(lureSource.position);
     }
 
     public bool HasVisitedLure(Transform lureSource) => visitedLures.Contains(lureSource);

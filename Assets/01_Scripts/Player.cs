@@ -18,7 +18,7 @@ public class Player : MonoBehaviour
     public float spreadAngle = 15f; // projectileCount > 1일 때 발사 간 각도 간격
     public int projectilePierce = 0; // 강화: 관통 사격
     public bool projectileSplash = false; // 강화: 스플래시 사격
-    public float splashRadius = 1.2f;
+    public float splashRadius = 1.8f;
     public int splashDamage = 1;
 
     Enemy currentTarget;
