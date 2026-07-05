@@ -149,6 +149,10 @@ public class BuildManager : MonoBehaviour
             Vector3 rootPos = prefab.transform.position;
             foreach (var src in prefab.GetComponentsInChildren<SpriteRenderer>(true))
             {
+                // 비활성화된 SpriteRenderer(예: 안 쓰는 예전 스프라이트가 꺼진 채 남아있는 경우)는
+                // 실제 설치 시에도 보이지 않으므로 미리보기에도 그리지 않는다.
+                if (!src.enabled) continue;
+
                 var go = new GameObject("PreviewSprite");
                 go.transform.SetParent(previewRoot, false);
                 go.transform.localPosition = src.transform.position - rootPos;

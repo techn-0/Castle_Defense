@@ -34,6 +34,13 @@ public class Enemy : MonoBehaviour
     HealthBar healthBar;
     HitFlash hitFlash;
 
+    // 슬로우 중엔 초록빛으로 물든다(Spike.SlowTintColor와 동일 색 — 슬로우 강화가 해금된
+    // 가시함정 표시와 시각 언어를 통일). SPUM 캐릭터는 스프라이트가 여러 부위로 쪼개져 있어
+    // 부위별 원래 색을 곱연산으로 유지한 채 틴트만 입힌다(HealthBar 스프라이트는 spumVisual
+    // 하위가 아니라 루트에 붙으므로 자연히 제외된다).
+    readonly List<(SpriteRenderer sr, Color baseColor)> visualRenderers = new();
+    bool slowTinted;
+
     SPUM_Prefabs spum;
     Transform spumVisual;
     bool spumMoving;
@@ -109,6 +116,16 @@ public class Enemy : MonoBehaviour
         sr = GetComponent<SpriteRenderer>();
         if (sr != null) sr.color = baseColor;
 
+        if (spumVisual != null)
+        {
+            foreach (var r in spumVisual.GetComponentsInChildren<SpriteRenderer>(true))
+                visualRenderers.Add((r, r.color));
+        }
+        else if (sr != null)
+        {
+            visualRenderers.Add((sr, sr.color));
+        }
+
         // HitFlash는 UnitRoot(SPUM 스프라이트 전부) 하위에 붙여서, HealthBar가 루트에 직접
         // 만들어 붙이는 체력바 스프라이트(HPBar_BG/Fill)는 점멸/펀치 대상에서 자연히 제외한다.
         var flashHost = spumVisual != null ? spumVisual.gameObject : gameObject;
@@ -125,6 +142,7 @@ public class Enemy : MonoBehaviour
             slowRemaining -= Time.deltaTime;
             if (slowRemaining <= 0f) slowMultiplier = 1f;
         }
+        UpdateSlowTint();
 
         if (burnRemaining > 0f)
         {
@@ -425,6 +443,20 @@ public class Enemy : MonoBehaviour
     {
         slowMultiplier = Mathf.Min(slowMultiplier, multiplier);
         slowRemaining = Mathf.Max(slowRemaining, duration);
+    }
+
+    void UpdateSlowTint()
+    {
+        bool slowActive = slowRemaining > 0f;
+        if (slowActive == slowTinted) return;
+        slowTinted = slowActive;
+
+        Color mul = slowActive ? Spike.SlowTintColor : Color.white;
+        foreach (var (r, baseC) in visualRenderers)
+        {
+            if (r == null) continue;
+            r.color = new Color(baseC.r * mul.r, baseC.g * mul.g, baseC.b * mul.b, baseC.a);
+        }
     }
 
     // 화염 함정 접촉이 끝나도(트랩을 벗어나도) 남은 시간 동안 독자적으로 도트 데미지를 계속 준다.

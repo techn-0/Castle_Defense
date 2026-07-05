@@ -14,7 +14,11 @@ public class UpgradeManager : MonoBehaviour
 
     void Awake() => I = this;
 
-    public void UnlockSpikeSlow() => SpikeSlowUnlocked = true;
+    public void UnlockSpikeSlow()
+    {
+        SpikeSlowUnlocked = true;
+        Spike.RefreshAllSlowTint();
+    }
     public void UnlockWallThorn() => WallThornUnlocked = true;
     public void UnlockFireSpread() => FireSpreadUnlocked = true;
 }
